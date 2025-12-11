@@ -150,8 +150,6 @@
 		}
 	}
 
-	// Get gnome count for display
-	$: gnomeCount = gameLoop?.state.gnomes.size ?? 0;
 </script>
 
 <div class="game-container">
