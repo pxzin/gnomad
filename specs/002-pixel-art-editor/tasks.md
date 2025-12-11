@@ -26,10 +26,10 @@
 
 **Purpose**: Project initialization and directory structure
 
-- [ ] T001 Install browser-fs-access dependency with `pnpm add browser-fs-access`
-- [ ] T002 [P] Create editor directory structure: `src/lib/editor/{components,state,tools,io}`
-- [ ] T003 [P] Create assets directory structure: `src/lib/assets/{source,sprites/{tiles,gnomes,structures,ui,resources,vegetation}}`
-- [ ] T004 [P] Create editor route directory: `src/routes/editor/`
+- [x] T001 Install browser-fs-access dependency with `pnpm add browser-fs-access`
+- [x] T002 [P] Create editor directory structure: `src/lib/editor/{components,state,tools,io}`
+- [x] T003 [P] Create assets directory structure: `src/lib/assets/{source,sprites/{tiles,gnomes,structures,ui,resources,vegetation}}`
+- [x] T004 [P] Create editor route directory: `src/routes/editor/`
 
 ---
 
@@ -39,12 +39,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Define TypeScript types in `src/lib/editor/types.ts` (PixelArtAsset, Pixel, AnimationMetadata, AssetPreset, AssetCategory, PresetConfig, EditorState, EditorTool, Tool, ToolContext, RGBAColor)
-- [ ] T006 Implement color utilities in `src/lib/editor/utils/color.ts` (parseHexColor, formatHexColor, colorsEqual, isValidHexColor, extractPalette)
-- [ ] T007 Implement coordinate utilities in `src/lib/editor/utils/coordinates.ts` (eventToPixel, isInBounds, clampToBounds)
-- [ ] T008 [P] Implement validation utilities in `src/lib/editor/utils/validation.ts` (validateAsset, validateAssetDetailed, isValidPixel)
-- [ ] T009 Implement editor state store using Svelte 5 runes in `src/lib/editor/state/editor.svelte.ts` (createEditorStore with reactive state, tool/color/zoom/grid methods)
-- [ ] T010 Define preset configurations in `src/lib/editor/io/presets.ts` (PRESET_CONFIGS array, getPresets, getPresetsByCategory, getPreset, createAssetFromPreset, createCustomAsset)
+- [x] T005 Define TypeScript types in `src/lib/editor/types.ts` (PixelArtAsset, Pixel, AnimationMetadata, AssetPreset, AssetCategory, PresetConfig, EditorState, EditorTool, Tool, ToolContext, RGBAColor)
+- [x] T006 Implement color utilities in `src/lib/editor/utils/color.ts` (parseHexColor, formatHexColor, colorsEqual, isValidHexColor, extractPalette)
+- [x] T007 Implement coordinate utilities in `src/lib/editor/utils/coordinates.ts` (eventToPixel, isInBounds, clampToBounds)
+- [x] T008 [P] Implement validation utilities in `src/lib/editor/utils/validation.ts` (validateAsset, validateAssetDetailed, isValidPixel)
+- [x] T009 Implement editor state store using Svelte 5 runes in `src/lib/editor/state/editor.svelte.ts` (createEditorStore with reactive state, tool/color/zoom/grid methods)
+- [x] T010 Define preset configurations in `src/lib/editor/io/presets.ts` (PRESET_CONFIGS array, getPresets, getPresetsByCategory, getPreset, createAssetFromPreset, createCustomAsset)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -58,17 +58,17 @@
 
 ### Implementation for User Story 1
 
-- [ ] T011 [P] [US1] Implement canvas pixel operations in `src/lib/editor/canvas/operations.ts` (setPixel, clearPixel, getPixel, setPixels)
-- [ ] T012 [P] [US1] Implement Bresenham line drawing in `src/lib/editor/canvas/drawing.ts` (drawLine, bresenhamLine algorithm)
-- [ ] T013 [P] [US1] Implement canvas rendering functions in `src/lib/editor/canvas/render.ts` (renderAssetToCanvas, renderAssetZoomed, renderTransparencyPattern, renderGrid)
-- [ ] T014 [US1] Implement pencil tool in `src/lib/editor/tools/pencil.ts` (onMouseDown, onMouseMove, onMouseUp with line interpolation)
-- [ ] T015 [US1] Implement tool types and base interface in `src/lib/editor/tools/types.ts` (Tool interface, tool registration)
-- [ ] T016 [US1] Create Canvas component in `src/lib/editor/components/Canvas.svelte` (canvas element, zoom display, grid overlay, mouse event handlers)
-- [ ] T017 [US1] Create PresetSelector component in `src/lib/editor/components/PresetSelector.svelte` (preset dropdown grouped by category, new asset action)
-- [ ] T018 [US1] Create ColorPicker component in `src/lib/editor/components/ColorPicker.svelte` (color input, current/secondary color display, swap colors)
-- [ ] T019 [US1] Create ToolPalette component in `src/lib/editor/components/ToolPalette.svelte` (tool buttons with active state, pencil tool only for MVP)
-- [ ] T020 [US1] Create editor page in `src/routes/editor/+page.svelte` (layout with toolbar, canvas area, integrate all US1 components)
-- [ ] T021 [US1] Implement keyboard shortcuts for US1 in `src/lib/editor/utils/keyboard.ts` (P for pencil, +/- for zoom, 0 for reset zoom, # for toggle grid, X for swap colors)
+- [x] T011 [P] [US1] Implement canvas pixel operations in `src/lib/editor/canvas/operations.ts` (setPixel, clearPixel, getPixel, setPixels)
+- [x] T012 [P] [US1] Implement Bresenham line drawing in `src/lib/editor/canvas/drawing.ts` (drawLine, bresenhamLine algorithm)
+- [x] T013 [P] [US1] Implement canvas rendering functions in `src/lib/editor/canvas/render.ts` (renderAssetToCanvas, renderAssetZoomed, renderTransparencyPattern, renderGrid)
+- [x] T014 [US1] Implement pencil tool in `src/lib/editor/tools/pencil.ts` (onMouseDown, onMouseMove, onMouseUp with line interpolation)
+- [x] T015 [US1] Implement tool types and base interface in `src/lib/editor/tools/types.ts` (Tool interface, tool registration)
+- [x] T016 [US1] Create Canvas component in `src/lib/editor/components/Canvas.svelte` (canvas element, zoom display, grid overlay, mouse event handlers)
+- [x] T017 [US1] Create PresetSelector component in `src/lib/editor/components/PresetSelector.svelte` (preset dropdown grouped by category, new asset action)
+- [x] T018 [US1] Create ColorPicker component in `src/lib/editor/components/ColorPicker.svelte` (color input, current/secondary color display, swap colors)
+- [x] T019 [US1] Create ToolPalette component in `src/lib/editor/components/ToolPalette.svelte` (tool buttons with active state, pencil tool only for MVP)
+- [x] T020 [US1] Create editor page in `src/routes/editor/+page.svelte` (layout with toolbar, canvas area, integrate all US1 components)
+- [x] T021 [US1] Implement keyboard shortcuts for US1 in `src/lib/editor/utils/keyboard.ts` (P for pencil, +/- for zoom, 0 for reset zoom, # for toggle grid, X for swap colors)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -82,12 +82,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Implement JSON serialization in `src/lib/editor/io/json.ts` (loadAssetFromJson, saveAssetToJson with validation and pretty-print)
-- [ ] T023 [US2] Implement file system operations in `src/lib/editor/io/file.ts` (openAssetFile, saveAssetFile using browser-fs-access with fallback)
-- [ ] T024 [US2] Add dirty tracking to editor state in `src/lib/editor/state/editor.svelte.ts` (isDirty flag, markDirty, markClean, file handle storage)
-- [ ] T025 [US2] Add save/load UI to toolbar in `src/routes/editor/+page.svelte` (Save JSON, Load JSON buttons)
-- [ ] T026 [US2] Add unsaved changes warning in `src/routes/editor/+page.svelte` (beforeunload event, confirm dialog)
-- [ ] T027 [US2] Implement keyboard shortcuts for US2 in `src/lib/editor/utils/keyboard.ts` (Ctrl+S for save, Ctrl+Shift+S for save as, Ctrl+O for open)
+- [x] T022 [US2] Implement JSON serialization in `src/lib/editor/io/json.ts` (loadAssetFromJson, saveAssetToJson with validation and pretty-print)
+- [x] T023 [US2] Implement file system operations in `src/lib/editor/io/file.ts` (openAssetFile, saveAssetFile using browser-fs-access with fallback)
+- [x] T024 [US2] Add dirty tracking to editor state in `src/lib/editor/state/editor.svelte.ts` (isDirty flag, markDirty, markClean, file handle storage)
+- [x] T025 [US2] Add save/load UI to toolbar in `src/routes/editor/+page.svelte` (Save JSON, Load JSON buttons)
+- [x] T026 [US2] Add unsaved changes warning in `src/routes/editor/+page.svelte` (beforeunload event, confirm dialog)
+- [x] T027 [US2] Implement keyboard shortcuts for US2 in `src/lib/editor/utils/keyboard.ts` (Ctrl+S for save, Ctrl+Shift+S for save as, Ctrl+O for open)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -101,9 +101,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Implement PNG export in `src/lib/editor/io/png.ts` (exportToPngBlob using canvas.toBlob, exportPng with file save)
-- [ ] T029 [US3] Add export UI to toolbar in `src/routes/editor/+page.svelte` (Export PNG button with filename input)
-- [ ] T030 [US3] Implement keyboard shortcut for US3 in `src/lib/editor/utils/keyboard.ts` (Ctrl+E for export PNG)
+- [x] T028 [US3] Implement PNG export in `src/lib/editor/io/png.ts` (exportToPngBlob using canvas.toBlob, exportPng with file save)
+- [x] T029 [US3] Add export UI to toolbar in `src/routes/editor/+page.svelte` (Export PNG button with filename input)
+- [x] T030 [US3] Implement keyboard shortcut for US3 in `src/lib/editor/utils/keyboard.ts` (Ctrl+E for export PNG)
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work independently
 
@@ -117,12 +117,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T031 [P] [US4] Implement eraser tool in `src/lib/editor/tools/eraser.ts` (clear pixels with line interpolation like pencil)
-- [ ] T032 [P] [US4] Implement flood fill algorithm in `src/lib/editor/canvas/drawing.ts` (floodFill with stack-based 4-connectivity)
-- [ ] T033 [US4] Implement fill tool in `src/lib/editor/tools/fill.ts` (flood fill from click position)
-- [ ] T034 [US4] Implement color picker tool in `src/lib/editor/tools/picker.ts` (sample pixel color, set as current color)
-- [ ] T035 [US4] Update ToolPalette component in `src/lib/editor/components/ToolPalette.svelte` (add eraser, fill, picker buttons)
-- [ ] T036 [US4] Implement keyboard shortcuts for US4 in `src/lib/editor/utils/keyboard.ts` (E for eraser, G for fill, I for picker)
+- [x] T031 [P] [US4] Implement eraser tool in `src/lib/editor/tools/eraser.ts` (clear pixels with line interpolation like pencil)
+- [x] T032 [P] [US4] Implement flood fill algorithm in `src/lib/editor/canvas/drawing.ts` (floodFill with stack-based 4-connectivity)
+- [x] T033 [US4] Implement fill tool in `src/lib/editor/tools/fill.ts` (flood fill from click position)
+- [x] T034 [US4] Implement color picker tool in `src/lib/editor/tools/picker.ts` (sample pixel color, set as current color)
+- [x] T035 [US4] Update ToolPalette component in `src/lib/editor/components/ToolPalette.svelte` (add eraser, fill, picker buttons)
+- [x] T036 [US4] Implement keyboard shortcuts for US4 in `src/lib/editor/utils/keyboard.ts` (E for eraser, G for fill, I for picker)
 
 **Checkpoint**: At this point, all basic drawing tools should work independently
 
@@ -136,10 +136,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T037 [US5] Implement history management in `src/lib/editor/state/editor.svelte.ts` (undoStack, redoStack, pushUndo, undo, redo, canUndo, canRedo)
-- [ ] T038 [US5] Integrate undo push into drawing operations in `src/lib/editor/tools/*.ts` (push state before modifying pixels)
-- [ ] T039 [US5] Add undo/redo UI to toolbar in `src/routes/editor/+page.svelte` (Undo, Redo buttons with disabled states)
-- [ ] T040 [US5] Implement keyboard shortcuts for US5 in `src/lib/editor/utils/keyboard.ts` (Ctrl+Z for undo, Ctrl+Y and Ctrl+Shift+Z for redo)
+- [x] T037 [US5] Implement history management in `src/lib/editor/state/editor.svelte.ts` (undoStack, redoStack, pushUndo, undo, redo, canUndo, canRedo)
+- [x] T038 [US5] Integrate undo push into drawing operations in `src/lib/editor/tools/*.ts` (push state before modifying pixels)
+- [x] T039 [US5] Add undo/redo UI to toolbar in `src/routes/editor/+page.svelte` (Undo, Redo buttons with disabled states)
+- [x] T040 [US5] Implement keyboard shortcuts for US5 in `src/lib/editor/utils/keyboard.ts` (Ctrl+Z for undo, Ctrl+Y and Ctrl+Shift+Z for redo)
 
 **Checkpoint**: At this point, undo/redo should work across all tools
 
@@ -153,10 +153,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T041 [US6] Implement PixiJS preview renderer in `src/lib/editor/preview/renderer.ts` (createPreviewRenderer, update, setScale, playAnimation, stopAnimation, destroy)
-- [ ] T042 [US6] Create Preview component in `src/lib/editor/components/Preview.svelte` (PixiJS canvas container, scale controls, animation playback for sprite sheets)
-- [ ] T043 [US6] Integrate Preview component into editor layout in `src/routes/editor/+page.svelte` (preview panel in aside, toggle visibility)
-- [ ] T044 [US6] Implement real-time preview updates in `src/lib/editor/state/editor.svelte.ts` (subscribe to asset changes, update preview)
+- [x] T041 [US6] Implement PixiJS preview renderer in `src/lib/editor/preview/renderer.ts` (createPreviewRenderer, update, setScale, playAnimation, stopAnimation, destroy)
+- [x] T042 [US6] Create Preview component in `src/lib/editor/components/Preview.svelte` (PixiJS canvas container, scale controls, animation playback for sprite sheets)
+- [x] T043 [US6] Integrate Preview component into editor layout in `src/routes/editor/+page.svelte` (preview panel in aside, toggle visibility)
+- [x] T044 [US6] Implement real-time preview updates in `src/lib/editor/state/editor.svelte.ts` (subscribe to asset changes, update preview)
 
 **Checkpoint**: At this point, all user stories should be fully functional
 
@@ -166,12 +166,12 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T045 [P] Add error handling for invalid JSON files in `src/lib/editor/io/json.ts` (try-catch, user-friendly error messages)
-- [ ] T046 [P] Add error handling for file system operations in `src/lib/editor/io/file.ts` (permission denied, cancelled dialog)
-- [ ] T047 Implement complete keyboard shortcut handler in `src/lib/editor/utils/keyboard.ts` (consolidate all shortcuts, prevent default browser behavior)
-- [ ] T048 Add loading states to UI in `src/routes/editor/+page.svelte` (file operations in progress indicator)
-- [ ] T049 Optimize fill operation for large canvases in `src/lib/editor/canvas/drawing.ts` (ensure <1s for 128x128)
-- [ ] T050 Run quickstart.md validation (verify all features work per checklist)
+- [x] T045 [P] Add error handling for invalid JSON files in `src/lib/editor/io/json.ts` (try-catch, user-friendly error messages)
+- [x] T046 [P] Add error handling for file system operations in `src/lib/editor/io/file.ts` (permission denied, cancelled dialog)
+- [x] T047 Implement complete keyboard shortcut handler in `src/lib/editor/utils/keyboard.ts` (consolidate all shortcuts, prevent default browser behavior)
+- [x] T048 Add loading states to UI in `src/routes/editor/+page.svelte` (file operations in progress indicator)
+- [x] T049 Optimize fill operation for large canvases in `src/lib/editor/canvas/drawing.ts` (ensure <1s for 128x128)
+- [x] T050 Run quickstart.md validation (verify all features work per checklist)
 
 ---
 

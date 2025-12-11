@@ -16,10 +16,11 @@
 		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.40.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
-		"@playwright/test": "^1.40.0",
+		"@types/node": "^25.0.0",
 		"@typescript-eslint/eslint-plugin": "^8.0.0",
 		"@typescript-eslint/parser": "^8.0.0",
 		"eslint": "^9.0.0",
@@ -33,6 +34,7 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
+		"browser-fs-access": "^0.38.0",
 		"pixi.js": "^8.0.0"
 	}
 }
