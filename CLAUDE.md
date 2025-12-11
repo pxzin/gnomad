@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2025-12-11
 
 ## Active Technologies
+
 - TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, Canvas 2D API (editing), PixiJS v8 (preview), browser-fs-access (file operations) (002-pixel-art-editor)
 - JSON files (source assets), PNG files (exports), no database (002-pixel-art-editor)
 - TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0, Vite 7.2.2 (003-game-hud)
@@ -36,17 +37,19 @@ npm test && npm run lint
 TypeScript 5.x (strict mode enabled): Follow standard conventions
 
 ## Recent Changes
+
 - 004-code-quality: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, PixiJS v8
 - 003-game-hud: Added TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0, Vite 7.2.2
 - 002-pixel-art-editor: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, Canvas 2D API (editing), PixiJS v8 (preview), browser-fs-access (file operations)
-
 
 <!-- MANUAL ADDITIONS START -->
 
 ## Design Principles
 
 ### DRY over Hardcoding
+
 Avoid hardcoding values that may change or are used in multiple places. Instead:
+
 - Use **enums** for discrete sets of values (e.g., `GameSpeed.Normal`, `GameSpeed.Fast`)
 - Use **constants arrays** for iteration (e.g., `AVAILABLE_SPEEDS`)
 - Use **lookup objects** for display values (e.g., `SPEED_LABELS`)
@@ -54,6 +57,7 @@ Avoid hardcoding values that may change or are used in multiple places. Instead:
 This allows changing values in one place without hunting through the codebase.
 
 **Example pattern:**
+
 ```typescript
 export enum GameSpeed {
   Normal = 1,
@@ -73,11 +77,51 @@ export const SPEED_LABELS: Record<GameSpeed, string> = {
 Balance KISS (Keep It Simple) with DRY (Don't Repeat Yourself) - simple code is good, but repeated magic values create maintenance burden.
 
 ### YAGNI for Abstractions
+
 Don't create abstractions for patterns that repeat only 2-3 times. ECS iteration patterns (e.g., `for (const [entity, component] of state.components)`) are normal and don't need helper functions. Only abstract when:
 - The same code appears 4+ times
 - The pattern is complex (>5 lines)
 - Abstraction provides clear semantic value
 
 **Audit finding (2025-12-11)**: No significant code duplications found. Code is already DRY.
+
+### Centralized Configuration
+
+**IMPORTANT**: When adding new features, always place configurable constants in `src/lib/config/`:
+
+| Type | File | Examples |
+|------|------|----------|
+| Colors | `config/colors.ts` | UI colors, entity colors, highlights |
+| Physics | `config/physics.ts` | Gravity, speed, rates |
+| Timing | `config/timing.ts` | Tick rates, timeouts, delays |
+| Input | `config/input.ts` | Pan speed, key bindings |
+
+**Checklist for new features:**
+- [ ] No magic numbers in code - use named constants
+- [ ] Constants in `config/` directory, not inline in files
+- [ ] Use UPPER_SNAKE_CASE for constant names
+- [ ] Re-export from original location if needed for backwards compatibility
+- [ ] Run `pnpm check` after changes
+
+### Code Quality Standards
+
+Every new file must follow these patterns:
+
+**Components** (`src/lib/components/`):
+1. JSDoc header with description
+2. Interface definition
+3. Factory function (`createX`)
+4. Constants (if any)
+
+**Systems** (`src/lib/systems/`):
+1. JSDoc header with description
+2. Main exported function (`xSystem`)
+3. Private helper functions
+4. System-specific constants (keep local if not reused)
+
+**Type Safety**:
+- Never use `any` without justification
+- All exported functions must have explicit return types
+- Use `unknown` instead of `any` when possible
 
 <!-- MANUAL ADDITIONS END -->
