@@ -146,7 +146,7 @@ The colony faces environmental challenges: day/night cycles affect visibility an
 #### Terrain Interaction
 
 - **FR-010**: Players MUST be able to designate terrain areas for excavation
-- **FR-011**: System MUST queue dig tasks and assign them to available gnomes
+- **FR-011**: System MUST queue tasks by priority level, processing higher priority tasks first; within the same priority level, tasks execute in FIFO order
 - **FR-012**: Different terrain types MUST have different mining durations (dirt fast, stone slow, ore medium)
 - **FR-013**: System MUST apply gravity to loose materials when supporting terrain is removed
 - **FR-014**: Mined resources MUST be added to colony stockpile upon collection
@@ -177,19 +177,21 @@ The colony faces environmental challenges: day/night cycles affect visibility an
 - **FR-027**: System MUST support saving and loading game state
 - **FR-028**: System MUST implement day/night cycle affecting gameplay
 - **FR-029**: System MUST track game time in discrete ticks for deterministic simulation
+- **FR-034**: System MUST support full pause (simulation stops, commands can still be queued) and speed controls (slow, normal, fast)
 
 #### User Interface
 
 - **FR-030**: System MUST provide smooth camera panning and zooming
 - **FR-031**: System MUST display gnome status, tasks, and health visually
 - **FR-032**: System MUST provide clear visual feedback for all player actions (selections, commands, placements)
+- **FR-033**: System MUST support mouse as primary input (click to select, drag to pan, scroll to zoom) with keyboard shortcuts for common actions
 
 ### Key Entities
 
 - **World**: The procedurally generated terrain grid; contains tile data, entity positions, and environmental state
 - **Tile**: Individual terrain unit (16x16); has material type, durability, and whether it's been revealed
 - **Gnome**: Colony member entity; has position, health, hunger, energy, current task, equipped items, and animation state
-- **Task**: Work order for gnomes; has type (dig, build, gather, craft), target location, priority, and assigned gnome
+- **Task**: Work order for gnomes; has type (dig, build, gather, craft), target location, priority level (determines execution order), creation timestamp (FIFO within same priority), and assigned gnome
 - **Resource**: Material in the stockpile; has type, quantity, and storage location
 - **Structure**: Built object in the world; has type, position, health, and functional properties
 - **Recipe**: Crafting definition; has required inputs, output item, crafting time, and required station type
@@ -208,6 +210,14 @@ The colony faces environmental challenges: day/night cycles affect visibility an
 - **SC-008**: Day/night cycle completes every 10 minutes of real-time gameplay
 - **SC-009**: Resource gathering and stockpile tracking accurately reflects all collection and consumption
 
+## Clarifications
+
+### Session 2025-12-11
+
+- Q: What is the primary input control scheme? → A: Mouse primary, keyboard shortcuts secondary
+- Q: How should task priority conflicts be resolved? → A: FIFO within priority levels; gnome needs do not override tasks
+- Q: Should the game support pausing and speed controls? → A: Speed controls (slow/normal/fast) plus full pause with command queuing
+
 ## Assumptions
 
 The following reasonable defaults have been applied based on the feature description and genre conventions:
@@ -219,4 +229,4 @@ The following reasonable defaults have been applied based on the feature descrip
 - **Resource Drops**: All mined blocks yield their corresponding resource type (1:1 ratio)
 - **Building Materials**: Basic structures require common materials (wood, stone); no rare resources for early game
 - **World Size**: Generated world is approximately 500 tiles wide by 200 tiles deep
-- **Gnome Needs**: Hunger and energy deplete over time; gnomes automatically eat and rest when resources/facilities available
+- **Gnome Needs**: Hunger and energy deplete over time; gnomes do NOT interrupt tasks for needs—they eat/rest only when idle or task complete (player is responsible for managing workload)
