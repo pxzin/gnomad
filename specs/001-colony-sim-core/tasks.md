@@ -24,12 +24,12 @@
 
 **Purpose**: Project initialization and SvelteKit + PixiJS setup
 
-- [ ] T001 Initialize SvelteKit project with TypeScript strict mode in project root
-- [ ] T002 Install dependencies (pixi.js, vitest, playwright) using pnpm
-- [ ] T003 [P] Configure tsconfig.json with strict: true, noImplicitAny, strictNullChecks
-- [ ] T004 [P] Configure ESLint and Prettier for TypeScript/Svelte
-- [ ] T005 Create directory structure per plan.md (src/lib/ecs, src/lib/components, src/lib/rendering, src/lib/input, src/lib/world-gen, src/lib/game)
-- [ ] T006 [P] Create docs/systems/ directory for system documentation
+- [X] T001 Initialize SvelteKit project with TypeScript strict mode in project root
+- [X] T002 Install dependencies (pixi.js, vitest, playwright) using pnpm
+- [X] T003 [P] Configure tsconfig.json with strict: true, noImplicitAny, strictNullChecks
+- [X] T004 [P] Configure ESLint and Prettier for TypeScript/Svelte
+- [X] T005 Create directory structure per plan.md (src/lib/ecs, src/lib/components, src/lib/rendering, src/lib/input, src/lib/world-gen, src/lib/game)
+- [X] T006 [P] Create docs/systems/ directory for system documentation
 
 ---
 
@@ -39,19 +39,19 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Define Entity type and core ECS types in src/lib/ecs/types.ts
-- [ ] T008 Define GameState interface with all component Maps in src/lib/game/state.ts
-- [ ] T009 [P] Define Position component interface in src/lib/components/position.ts
-- [ ] T010 [P] Define Velocity component interface in src/lib/components/velocity.ts
-- [ ] T011 [P] Define Tile component with TileType enum in src/lib/components/tile.ts
-- [ ] T012 [P] Define Gnome component with GnomeState enum in src/lib/components/gnome.ts
-- [ ] T013 [P] Define Task component with TaskType and TaskPriority enums in src/lib/components/task.ts
-- [ ] T014 [P] Define Camera interface in src/lib/components/camera.ts
-- [ ] T015 [P] Define Command types (player input) in src/lib/game/commands.ts
-- [ ] T016 Implement createEntity, destroyEntity, addComponent, getComponent in src/lib/ecs/world.ts
-- [ ] T017 Implement seeded PRNG (mulberry32) in src/lib/world-gen/noise.ts
-- [ ] T018 Implement serialize/deserialize functions for save/load in src/lib/game/state.ts
-- [ ] T019 [P] Write system documentation for ECS in docs/systems/ecs.md
+- [X] T007 Define Entity type and core ECS types in src/lib/ecs/types.ts
+- [X] T008 Define GameState interface with all component Maps in src/lib/game/state.ts
+- [X] T009 [P] Define Position component interface in src/lib/components/position.ts
+- [X] T010 [P] Define Velocity component interface in src/lib/components/velocity.ts
+- [X] T011 [P] Define Tile component with TileType enum in src/lib/components/tile.ts
+- [X] T012 [P] Define Gnome component with GnomeState enum in src/lib/components/gnome.ts
+- [X] T013 [P] Define Task component with TaskType and TaskPriority enums in src/lib/components/task.ts
+- [X] T014 [P] Define Camera interface in src/lib/components/camera.ts
+- [X] T015 [P] Define Command types (player input) in src/lib/game/commands.ts
+- [X] T016 Implement createEntity, destroyEntity, addComponent, getComponent in src/lib/ecs/world.ts
+- [X] T017 Implement seeded PRNG (mulberry32) in src/lib/world-gen/noise.ts
+- [X] T018 Implement serialize/deserialize functions for save/load in src/lib/game/state.ts
+- [X] T019 [P] Write system documentation for ECS in docs/systems/ecs.md
 
 **Checkpoint**: Foundation ready - ECS types defined, entity management working
 
@@ -67,39 +67,39 @@
 
 #### World Generation
 
-- [ ] T020 [US1] Implement generateWorld function with layered terrain in src/lib/world-gen/generator.ts
-- [ ] T021 [US1] Implement getTileAt, isInBounds, isSolid helper functions in src/lib/world-gen/generator.ts
-- [ ] T022 [US1] Create initial gnome entity at surface spawn point in src/lib/world-gen/generator.ts
-- [ ] T023 [P] [US1] Write system documentation for world generation in docs/systems/world-gen.md
+- [X] T020 [US1] Implement generateWorld function with layered terrain in src/lib/world-gen/generator.ts
+- [X] T021 [US1] Implement getTileAt, isInBounds, isSolid helper functions in src/lib/world-gen/generator.ts
+- [X] T022 [US1] Create initial gnome entity at surface spawn point in src/lib/world-gen/generator.ts
+- [X] T023 [P] [US1] Write system documentation for world generation in docs/systems/world-gen.md
 
 #### Rendering
 
-- [ ] T024 [US1] Implement createRenderer with PixiJS v8 Application init in src/lib/rendering/renderer.ts
-- [ ] T025 [US1] Implement tile rendering (colored rectangles) with viewport culling in src/lib/rendering/tile-renderer.ts
-- [ ] T026 [US1] Implement gnome rendering (colored square) in src/lib/rendering/entity-renderer.ts
-- [ ] T027 [US1] Implement getVisibleTileRange for camera culling in src/lib/rendering/renderer.ts
-- [ ] T028 [US1] Implement screenToTile coordinate conversion in src/lib/rendering/renderer.ts
+- [X] T024 [US1] Implement createRenderer with PixiJS v8 Application init in src/lib/rendering/renderer.ts
+- [X] T025 [US1] Implement tile rendering (colored rectangles) with viewport culling in src/lib/rendering/tile-renderer.ts
+- [X] T026 [US1] Implement gnome rendering (colored square) in src/lib/rendering/entity-renderer.ts
+- [X] T027 [US1] Implement getVisibleTileRange for camera culling in src/lib/rendering/renderer.ts
+- [X] T028 [US1] Implement screenToTile coordinate conversion in src/lib/rendering/renderer.ts
 
 #### Camera Controls
 
-- [ ] T029 [US1] Implement panCamera and zoomCamera functions in src/lib/game/state.ts
-- [ ] T030 [US1] Implement updateCamera for smooth interpolation in src/lib/game/state.ts
-- [ ] T031 [US1] Implement mouse drag for camera pan in src/lib/input/mouse.ts
-- [ ] T032 [US1] Implement scroll wheel for camera zoom in src/lib/input/mouse.ts
-- [ ] T033 [US1] Implement InputManager with flushCommands in src/lib/input/mouse.ts
+- [X] T029 [US1] Implement panCamera and zoomCamera functions in src/lib/game/state.ts
+- [X] T030 [US1] Implement updateCamera for smooth interpolation in src/lib/game/state.ts
+- [X] T031 [US1] Implement mouse drag for camera pan in src/lib/input/mouse.ts
+- [X] T032 [US1] Implement scroll wheel for camera zoom in src/lib/input/mouse.ts
+- [X] T033 [US1] Implement InputManager with flushCommands in src/lib/input/mouse.ts
 
 #### Game Loop
 
-- [ ] T034 [US1] Implement fixed timestep game loop (60 ticks/s) in src/lib/game/loop.ts
-- [ ] T035 [US1] Implement tick function processing commands in src/lib/game/loop.ts
-- [ ] T036 [US1] Implement pause/resume and speed controls in src/lib/game/loop.ts
-- [ ] T037 [US1] Implement startGameLoop with render interpolation in src/lib/game/loop.ts
+- [X] T034 [US1] Implement fixed timestep game loop (60 ticks/s) in src/lib/game/loop.ts
+- [X] T035 [US1] Implement tick function processing commands in src/lib/game/loop.ts
+- [X] T036 [US1] Implement pause/resume and speed controls in src/lib/game/loop.ts
+- [X] T037 [US1] Implement startGameLoop with render interpolation in src/lib/game/loop.ts
 
 #### Svelte Integration
 
-- [ ] T038 [US1] Create main game page with PixiJS canvas in src/routes/+page.svelte
-- [ ] T039 [US1] Wire up game initialization (createGame, createRenderer, startGameLoop) in src/routes/+page.svelte
-- [ ] T040 [US1] Add basic UI for pause button and speed controls in src/routes/+page.svelte
+- [X] T038 [US1] Create main game page with PixiJS canvas in src/routes/+page.svelte
+- [X] T039 [US1] Wire up game initialization (createGame, createRenderer, startGameLoop) in src/routes/+page.svelte
+- [X] T040 [US1] Add basic UI for pause button and speed controls in src/routes/+page.svelte
 
 **Checkpoint**: User Story 1 complete - world renders, camera works, gnome visible
 
@@ -115,48 +115,48 @@
 
 #### Tile Selection
 
-- [ ] T041 [US2] Implement tile selection on click in src/lib/input/mouse.ts
-- [ ] T042 [US2] Implement visual selection highlight in src/lib/rendering/tile-renderer.ts
-- [ ] T043 [US2] Add DIG command creation on selection + button/key in src/lib/input/mouse.ts
+- [X] T041 [US2] Implement tile selection on click in src/lib/input/mouse.ts
+- [X] T042 [US2] Implement visual selection highlight in src/lib/rendering/tile-renderer.ts
+- [X] T043 [US2] Add DIG command creation on selection + button/key in src/lib/input/mouse.ts
 
 #### Task System
 
-- [ ] T044 [US2] Implement createDigTask function in src/lib/ecs/systems/task-system.ts
-- [ ] T045 [US2] Implement getTaskQueue (priority + FIFO sorting) in src/lib/ecs/systems/task-system.ts
-- [ ] T046 [US2] Implement assignNextTask to idle gnome in src/lib/ecs/systems/task-system.ts
-- [ ] T047 [US2] Implement completeTask and cancelTask in src/lib/ecs/systems/task-system.ts
-- [ ] T048 [P] [US2] Write system documentation for task system in docs/systems/tasks.md
+- [X] T044 [US2] Implement createDigTask function in src/lib/ecs/systems/task-system.ts
+- [X] T045 [US2] Implement getTaskQueue (priority + FIFO sorting) in src/lib/ecs/systems/task-system.ts
+- [X] T046 [US2] Implement assignNextTask to idle gnome in src/lib/ecs/systems/task-system.ts
+- [X] T047 [US2] Implement completeTask and cancelTask in src/lib/ecs/systems/task-system.ts
+- [X] T048 [P] [US2] Write system documentation for task system in docs/systems/tasks.md
 
 #### Pathfinding
 
-- [ ] T049 [US2] Implement A* pathfinding with Manhattan heuristic in src/lib/ecs/systems/pathfinding.ts
-- [ ] T050 [US2] Implement findAdjacentPosition for mining approach in src/lib/ecs/systems/pathfinding.ts
-- [ ] T051 [P] [US2] Write system documentation for pathfinding in docs/systems/pathfinding.md
+- [X] T049 [US2] Implement A* pathfinding with Manhattan heuristic in src/lib/ecs/systems/pathfinding.ts
+- [X] T050 [US2] Implement findAdjacentPosition for mining approach in src/lib/ecs/systems/pathfinding.ts
+- [X] T051 [P] [US2] Write system documentation for pathfinding in docs/systems/pathfinding.md
 
 #### Movement System
 
-- [ ] T052 [US2] Implement movement system (gnome follows path) in src/lib/ecs/systems/movement.ts
-- [ ] T053 [US2] Handle gnome state transitions (Idle → Walking → Mining) in src/lib/ecs/systems/movement.ts
-- [ ] T054 [P] [US2] Write system documentation for movement in docs/systems/movement.md
+- [X] T052 [US2] Implement movement system (gnome follows path) in src/lib/ecs/systems/movement.ts
+- [X] T053 [US2] Handle gnome state transitions (Idle → Walking → Mining) in src/lib/ecs/systems/movement.ts
+- [X] T054 [P] [US2] Write system documentation for movement in docs/systems/movement.md
 
 #### Mining System
 
-- [ ] T055 [US2] Implement processMining (reduce durability per tick) in src/lib/ecs/systems/mining.ts
-- [ ] T056 [US2] Implement destroyTile (remove from grid, update rendering) in src/lib/ecs/systems/mining.ts
-- [ ] T057 [US2] Implement getMiningRate (base rate for MVP) in src/lib/ecs/systems/mining.ts
-- [ ] T058 [P] [US2] Write system documentation for mining in docs/systems/mining.md
+- [X] T055 [US2] Implement processMining (reduce durability per tick) in src/lib/ecs/systems/mining.ts
+- [X] T056 [US2] Implement destroyTile (remove from grid, update rendering) in src/lib/ecs/systems/mining.ts
+- [X] T057 [US2] Implement getMiningRate (base rate for MVP) in src/lib/ecs/systems/mining.ts
+- [X] T058 [P] [US2] Write system documentation for mining in docs/systems/mining.md
 
 #### Gravity System
 
-- [ ] T059 [US2] Implement shouldFall check in src/lib/ecs/systems/gravity.ts
-- [ ] T060 [US2] Implement applyGravity to gnome after tile destruction in src/lib/ecs/systems/gravity.ts
-- [ ] T061 [US2] Handle Falling state and landing in src/lib/ecs/systems/gravity.ts
-- [ ] T062 [P] [US2] Write system documentation for gravity in docs/systems/gravity.md
+- [X] T059 [US2] Implement shouldFall check in src/lib/ecs/systems/gravity.ts
+- [X] T060 [US2] Implement applyGravity to gnome after tile destruction in src/lib/ecs/systems/gravity.ts
+- [X] T061 [US2] Handle Falling state and landing in src/lib/ecs/systems/gravity.ts
+- [X] T062 [P] [US2] Write system documentation for gravity in docs/systems/gravity.md
 
 #### System Integration
 
-- [ ] T063 [US2] Integrate all systems into tick function (order: input → tasks → pathfinding → movement → mining → gravity → render)
-- [ ] T064 [US2] Add dig task indicator in tile rendering in src/lib/rendering/tile-renderer.ts
+- [X] T063 [US2] Integrate all systems into tick function (order: input → tasks → pathfinding → movement → mining → gravity → render)
+- [X] T064 [US2] Add dig task indicator in tile rendering in src/lib/rendering/tile-renderer.ts
 
 **Checkpoint**: User Story 2 complete - dig command works end-to-end
 
@@ -166,12 +166,12 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T065 [P] Implement save to localStorage in src/lib/game/state.ts
-- [ ] T066 [P] Implement load from localStorage in src/lib/game/state.ts
-- [ ] T067 Add save/load buttons to UI in src/routes/+page.svelte
-- [ ] T068 [P] Add keyboard shortcuts (Space=pause, 1/2/3=speed) in src/lib/input/keyboard.ts
-- [ ] T069 Performance check: verify 60 FPS with 100x50 world
-- [ ] T070 Run quickstart.md validation (follow setup steps, verify game works)
+- [X] T065 [P] Implement save to localStorage in src/lib/game/state.ts
+- [X] T066 [P] Implement load from localStorage in src/lib/game/state.ts
+- [X] T067 Add save/load buttons to UI in src/routes/+page.svelte
+- [X] T068 [P] Add keyboard shortcuts (Space=pause, 1/2/3=speed) in src/lib/input/keyboard.ts
+- [X] T069 Performance check: verify 60 FPS with 100x50 world
+- [X] T070 Run quickstart.md validation (follow setup steps, verify game works)
 
 ---
 
