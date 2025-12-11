@@ -8,12 +8,10 @@
 import type { GameState } from './state';
 import { updateCamera } from './state';
 import type { Command } from './commands';
+import { TICKS_PER_SECOND, MS_PER_TICK } from '$lib/config/timing';
 
-/**
- * Fixed timestep: 60 ticks per second.
- */
-export const TICKS_PER_SECOND = 60;
-export const MS_PER_TICK = 1000 / TICKS_PER_SECOND;
+// Re-export for backwards compatibility
+export { TICKS_PER_SECOND, MS_PER_TICK };
 
 /**
  * Game loop state - now a class for mutable state that can be shared.

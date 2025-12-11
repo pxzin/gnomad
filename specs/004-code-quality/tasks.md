@@ -25,8 +25,8 @@
 
 **Purpose**: Create config directory structure for centralized constants
 
-- [ ] T001 Create config directory structure at `src/lib/config/`
-- [ ] T002 [P] Create barrel file at `src/lib/config/index.ts`
+- [x] T001 Create config directory structure at `src/lib/config/` ✅
+- [x] T002 [P] Create barrel file at `src/lib/config/index.ts` ✅
 
 **Checkpoint**: Config directory ready for constant files
 
@@ -50,18 +50,18 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [P] [US1] Create colors config file at `src/lib/config/colors.ts` with SELECTION_COLOR, SELECTION_ALPHA, TASK_MARKER_COLOR, TASK_MARKER_ALPHA, SKY_COLOR, GNOME_COLOR
-- [ ] T004 [P] [US1] Create physics config file at `src/lib/config/physics.ts` with GRAVITY, TERMINAL_VELOCITY, GNOME_SPEED, GNOME_MINE_RATE
-- [ ] T005 [P] [US1] Create timing config file at `src/lib/config/timing.ts` with TICKS_PER_SECOND, MS_PER_TICK, DOUBLE_CLICK_TIMEOUT
-- [ ] T006 [P] [US1] Create input config file at `src/lib/config/input.ts` with PAN_SPEED
-- [ ] T007 [US1] Update barrel file `src/lib/config/index.ts` to export all config modules
-- [ ] T008 [US1] Update `src/lib/render/renderer.ts` to import colors from config (remove local SELECTION_COLOR, SELECTION_ALPHA, TASK_MARKER_COLOR, TASK_MARKER_ALPHA, use SKY_COLOR for backgroundColor)
-- [ ] T009 [US1] Update `src/lib/systems/physics.ts` to import GRAVITY and TERMINAL_VELOCITY from config
-- [ ] T010 [US1] Update `src/lib/components/gnome.ts` to re-export GNOME_COLOR from config/colors and GNOME_SPEED, GNOME_MINE_RATE from config/physics
-- [ ] T011 [US1] Update `src/lib/input/handler.ts` to import DOUBLE_CLICK_TIMEOUT from config/timing and PAN_SPEED from config/input
-- [ ] T012 [US1] Update `src/lib/game/loop.ts` to import TICKS_PER_SECOND, MS_PER_TICK from config/timing (keep re-exports for backwards compatibility)
-- [ ] T013 [US1] Run `pnpm check` to verify no TypeScript errors after US1 changes
-- [ ] T014 [US1] Manual test: verify game runs correctly (rendering, physics, input all work)
+- [x] T003 [P] [US1] Create colors config file at `src/lib/config/colors.ts` with SELECTION_COLOR, SELECTION_ALPHA, TASK_MARKER_COLOR, TASK_MARKER_ALPHA, SKY_COLOR, GNOME_COLOR ✅
+- [x] T004 [P] [US1] Create physics config file at `src/lib/config/physics.ts` with GRAVITY, TERMINAL_VELOCITY, GNOME_SPEED, GNOME_MINE_RATE ✅
+- [x] T005 [P] [US1] Create timing config file at `src/lib/config/timing.ts` with TICKS_PER_SECOND, MS_PER_TICK, DOUBLE_CLICK_TIMEOUT ✅
+- [x] T006 [P] [US1] Create input config file at `src/lib/config/input.ts` with PAN_SPEED ✅
+- [x] T007 [US1] Update barrel file `src/lib/config/index.ts` to export all config modules ✅
+- [x] T008 [US1] Update `src/lib/render/renderer.ts` to import colors from config (remove local SELECTION_COLOR, SELECTION_ALPHA, TASK_MARKER_COLOR, TASK_MARKER_ALPHA, use SKY_COLOR for backgroundColor) ✅
+- [x] T009 [US1] Update `src/lib/systems/physics.ts` to import GRAVITY and TERMINAL_VELOCITY from config ✅
+- [x] T010 [US1] Update `src/lib/components/gnome.ts` to re-export GNOME_COLOR from config/colors and GNOME_SPEED, GNOME_MINE_RATE from config/physics ✅
+- [x] T011 [US1] Update `src/lib/input/handler.ts` to import DOUBLE_CLICK_TIMEOUT from config/timing and PAN_SPEED from config/input ✅
+- [x] T012 [US1] Update `src/lib/game/loop.ts` to import TICKS_PER_SECOND, MS_PER_TICK from config/timing (keep re-exports for backwards compatibility) ✅
+- [x] T013 [US1] Run `pnpm check` to verify no TypeScript errors after US1 changes ✅
+- [ ] T014 [US1] Manual test: verify game runs correctly (rendering, physics, input all work) ⏳ (user action)
 
 **Checkpoint**: All magic numbers centralized. `pnpm check` passes. Game runs identically.
 
@@ -75,8 +75,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Review research.md section 2.2 - confirm no significant duplications require extraction
-- [ ] T016 [US2] Document decision in CLAUDE.md: "No abstractions created for ECS iteration patterns (YAGNI)"
+- [x] T015 [US2] Review research.md section 2.2 - confirm no significant duplications require extraction ✅
+- [x] T016 [US2] Document decision in CLAUDE.md: "No abstractions created for ECS iteration patterns (YAGNI)" ✅
 
 **Checkpoint**: Research finding confirmed: code is already DRY. No changes needed.
 
@@ -90,11 +90,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Audit component files in `src/lib/components/` - verify all follow Interface + Factory + Constants pattern
-- [ ] T018 [US3] Audit system files in `src/lib/systems/` - verify all follow Main Function + Helpers + JSDoc pattern
-- [ ] T019 [US3] Verify all exported constants use UPPER_SNAKE_CASE naming convention
-- [ ] T020 [US3] Add conventions documentation to `specs/004-code-quality/contracts/conventions.md` (already created)
-- [ ] T021 [US3] Run `pnpm lint` to verify code style consistency
+- [x] T017 [US3] Audit component files in `src/lib/components/` - verify all follow Interface + Factory + Constants pattern ✅
+- [x] T018 [US3] Audit system files in `src/lib/systems/` - verify all follow Main Function + Helpers + JSDoc pattern ✅
+- [x] T019 [US3] Verify all exported constants use UPPER_SNAKE_CASE naming convention ✅
+- [x] T020 [US3] Add conventions documentation to `specs/004-code-quality/contracts/conventions.md` (already created) ✅
+- [x] T021 [US3] Run `pnpm lint` to verify code style consistency ⚠️ (ESLint config migration needed - project issue)
 
 **Checkpoint**: Structure audit complete. Conventions documented.
 
@@ -108,11 +108,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T022 [US4] Run `grep -rn ": any" src/lib --include="*.ts" | grep -v editor` to verify zero 'any' usage
-- [ ] T023 [US4] Audit public functions in `src/lib/game/` for explicit return types
-- [ ] T024 [US4] Audit public functions in `src/lib/systems/` for explicit return types
-- [ ] T025 [US4] Audit public functions in `src/lib/render/` for explicit return types
-- [ ] T026 [US4] Run `pnpm check` in strict mode to verify type safety
+- [x] T022 [US4] Run `grep -rn ": any" src/lib --include="*.ts" | grep -v editor` to verify zero 'any' usage ✅ (zero matches)
+- [x] T023 [US4] Audit public functions in `src/lib/game/` for explicit return types ✅
+- [x] T024 [US4] Audit public functions in `src/lib/systems/` for explicit return types ✅
+- [x] T025 [US4] Audit public functions in `src/lib/render/` for explicit return types ✅
+- [x] T026 [US4] Run `pnpm check` in strict mode to verify type safety ✅ (0 errors)
 
 **Checkpoint**: Type safety verified. All public functions have explicit types.
 
@@ -122,12 +122,12 @@
 
 **Purpose**: Documentation updates and final validation
 
-- [ ] T027 [P] Update CLAUDE.md with new config structure documentation in `CLAUDE.md`
-- [ ] T028 [P] Update CLAUDE.md Design Principles section with DRY pattern example (GameSpeed enum)
-- [ ] T029 Run `pnpm check` final validation
-- [ ] T030 Run `pnpm lint` final validation
-- [ ] T031 Manual playtest: verify game runs correctly with all changes
-- [ ] T032 Run quickstart.md validation checklist
+- [x] T027 [P] Update CLAUDE.md with new config structure documentation in `CLAUDE.md` ✅
+- [x] T028 [P] Update CLAUDE.md Design Principles section with DRY pattern example (GameSpeed enum) ✅ (already done in previous session)
+- [x] T029 Run `pnpm check` final validation ✅ (0 errors)
+- [x] T030 Run `pnpm lint` final validation ⚠️ (ESLint config migration needed - project issue)
+- [ ] T031 Manual playtest: verify game runs correctly with all changes ⏳ (user action)
+- [x] T032 Run quickstart.md validation checklist ✅
 
 ---
 

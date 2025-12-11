@@ -15,7 +15,15 @@ Auto-generated from all feature plans. Last updated: 2025-12-11
 ## Project Structure
 
 ```text
-src/
+src/lib/
+  config/        # Centralized constants (colors, physics, timing, input)
+  components/    # ECS components (Position, Velocity, Gnome, Tile, etc.)
+  systems/       # ECS systems (physics, mining, pathfinding, task-assignment)
+  game/          # Game loop and state management
+  render/        # PixiJS rendering
+  input/         # Input handling
+  ecs/           # Entity-component-system utilities
+  world-gen/     # World generation
 tests/
 ```
 
@@ -63,5 +71,13 @@ export const SPEED_LABELS: Record<GameSpeed, string> = {
 ```
 
 Balance KISS (Keep It Simple) with DRY (Don't Repeat Yourself) - simple code is good, but repeated magic values create maintenance burden.
+
+### YAGNI for Abstractions
+Don't create abstractions for patterns that repeat only 2-3 times. ECS iteration patterns (e.g., `for (const [entity, component] of state.components)`) are normal and don't need helper functions. Only abstract when:
+- The same code appears 4+ times
+- The pattern is complex (>5 lines)
+- Abstraction provides clear semantic value
+
+**Audit finding (2025-12-11)**: No significant code duplications found. Code is already DRY.
 
 <!-- MANUAL ADDITIONS END -->

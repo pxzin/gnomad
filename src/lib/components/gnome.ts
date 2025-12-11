@@ -43,17 +43,6 @@ export function createGnome(): Gnome {
 	};
 }
 
-/**
- * Gnome rendering color (MVP: colored square).
- */
-export const GNOME_COLOR = 0x00ff00; // Bright green
-
-/**
- * Gnome movement speed in tiles per tick.
- */
-export const GNOME_SPEED = 0.1; // 6 tiles per second at 60 ticks/s
-
-/**
- * Base mining rate (durability reduced per tick).
- */
-export const GNOME_MINE_RATE = 1;
+// Re-export constants from centralized config (backwards compatibility)
+export { GNOME_COLOR } from '$lib/config/colors';
+export { GNOME_SPEED, GNOME_MINE_RATE } from '$lib/config/physics';

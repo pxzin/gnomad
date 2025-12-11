@@ -8,16 +8,7 @@ import type { GameState } from '$lib/game/state';
 import { getEntitiesWithGnome, updatePosition, updateGnome } from '$lib/ecs/world';
 import { GnomeState, GNOME_SPEED } from '$lib/components/gnome';
 import { isSolid } from '$lib/world-gen/generator';
-
-/**
- * Gravity acceleration in tiles per tick squared.
- */
-const GRAVITY = 0.02;
-
-/**
- * Terminal velocity in tiles per tick.
- */
-const TERMINAL_VELOCITY = 0.5;
+import { GRAVITY, TERMINAL_VELOCITY } from '$lib/config/physics';
 
 /**
  * Physics system update.

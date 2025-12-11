@@ -22,16 +22,8 @@ import {
 } from '$lib/game/commands';
 import { TileType } from '$lib/components/tile';
 import type { Entity } from '$lib/ecs/types';
-
-/**
- * Double-click detection timeout in milliseconds.
- */
-const DOUBLE_CLICK_TIMEOUT = 300;
-
-/**
- * Camera pan speed for arrow keys (pixels per frame at 60fps).
- */
-const PAN_SPEED = 8;
+import { DOUBLE_CLICK_TIMEOUT } from '$lib/config/timing';
+import { PAN_SPEED } from '$lib/config/input';
 
 /**
  * Input state for tracking drag operations.

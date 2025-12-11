@@ -9,23 +9,18 @@ import { Application, Container, Graphics } from 'pixi.js';
 import type { GameState } from '$lib/game/state';
 import { TILE_CONFIG, TileType } from '$lib/components/tile';
 import { GNOME_COLOR } from '$lib/components/gnome';
+import {
+	SELECTION_COLOR,
+	SELECTION_ALPHA,
+	TASK_MARKER_COLOR,
+	TASK_MARKER_ALPHA,
+	SKY_COLOR
+} from '$lib/config/colors';
 
 /**
  * Tile size in pixels.
  */
 export const TILE_SIZE = 16;
-
-/**
- * Selection highlight color.
- */
-const SELECTION_COLOR = 0xffff00;
-const SELECTION_ALPHA = 0.3;
-
-/**
- * Task marker color.
- */
-const TASK_MARKER_COLOR = 0xff0000;
-const TASK_MARKER_ALPHA = 0.5;
 
 /**
  * Renderer state.
@@ -51,7 +46,7 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		canvas,
 		width: canvas.width,
 		height: canvas.height,
-		backgroundColor: 0x87ceeb, // Sky blue
+		backgroundColor: SKY_COLOR,
 		antialias: false,
 		resolution: window.devicePixelRatio || 1,
 		autoDensity: true
