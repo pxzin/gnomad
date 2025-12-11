@@ -294,3 +294,33 @@ export function screenToTile(
 		y: Math.floor(worldY / TILE_SIZE)
 	};
 }
+
+/**
+ * Get visible tile bounds (min/max tile coordinates visible on screen).
+ */
+export function getVisibleBounds(
+	renderer: Renderer,
+	state: GameState
+): { minX: number; maxX: number; minY: number; maxY: number } {
+	const topLeft = screenToTile(renderer, state, 0, 0);
+	const bottomRight = screenToTile(
+		renderer,
+		state,
+		renderer.app.screen.width,
+		renderer.app.screen.height
+	);
+
+	return {
+		minX: topLeft.x - 1, // Add margin for entities partially visible
+		maxX: bottomRight.x + 1,
+		minY: topLeft.y - 1,
+		maxY: bottomRight.y + 1
+	};
+}
+
+/**
+ * Get current FPS from the PixiJS ticker.
+ */
+export function getFPS(renderer: Renderer): number {
+	return renderer.app.ticker.FPS;
+}

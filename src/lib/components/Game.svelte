@@ -19,18 +19,28 @@
 		destroyRenderer,
 		resizeRenderer,
 		render,
+		getFPS,
 		type Renderer
 	} from '$lib/render/renderer';
 	import { createInputHandlers, type InputHandlers } from '$lib/input/handler';
 	import type { Command } from '$lib/game/commands';
 	import { spawnGnomeCommand } from '$lib/game/commands';
-	import { saveToLocalStorage, loadFromLocalStorage } from '$lib/game/state';
+	import { saveToLocalStorage, loadFromLocalStorage, type GameState } from '$lib/game/state';
+	import HudOverlay from './hud/HudOverlay.svelte';
 
 	// Props
-	export let worldConfig: Partial<WorldConfig> = {};
+	interface Props {
+		worldConfig?: Partial<WorldConfig>;
+	}
+
+	let { worldConfig = {} }: Props = $props();
 
 	// Save/load status
-	let saveMessage = '';
+	let saveMessage = $state('');
+
+	// Reactive game state for HUD
+	let gameState: GameState | null = $state(null);
+	let fps: number = $state(0);
 
 	// State
 	let canvas: HTMLCanvasElement;
@@ -89,9 +99,17 @@
 
 			// Start game loop
 			gameLoop = startLoop(gameLoop, processCommand, systems, (state, interpolation) => {
+				// Process continuous input (keyboard pan)
+				if (inputHandlers) {
+					inputHandlers.update();
+				}
 				if (renderer) {
 					render(renderer, state, interpolation);
+					// Update FPS from renderer
+					fps = getFPS(renderer);
 				}
+				// Update reactive state for HUD
+				gameState = state;
 			});
 		})();
 
@@ -150,48 +168,24 @@
 		}
 	}
 
+	// Handle commands from HUD
+	function handleCommand(command: Command) {
+		if (gameLoop) {
+			queueCommand(gameLoop, command);
+		}
+	}
 </script>
 
 <div class="game-container">
 	<canvas bind:this={canvas}></canvas>
 
-	{#if gameLoop}
-		<div class="hud">
-			<div class="hud-item">
-				Tick: {gameLoop.state.tick}
-			</div>
-			<div class="hud-item">
-				Speed: {gameLoop.state.speed}x
-				{#if gameLoop.state.isPaused}
-					<span class="paused">(PAUSED)</span>
-				{/if}
-			</div>
-			<div class="hud-item">
-				Gnomes: {gameLoop.state.gnomes.size}
-			</div>
-			<div class="hud-item">
-				Tasks: {gameLoop.state.tasks.size}
-			</div>
-			<div class="hud-item">
-				Selected: {gameLoop.state.selectedTiles.length}
-			</div>
-			<button class="spawn-button" onclick={handleSpawnGnome}>+ Gnome</button>
-		</div>
-
-		<div class="controls">
-			<p><strong>Controls:</strong></p>
-			<p>Left click: Select tiles</p>
-			<p>Right/Middle drag: Pan camera</p>
-			<p>Scroll: Zoom</p>
-			<p>D: Dig selected tiles</p>
-			<p>Space: Pause/Resume</p>
-			<p>1/2/3: Speed (0.5x/1x/2x)</p>
-			<p>Esc: Clear selection</p>
-		</div>
+	{#if gameState}
+		<HudOverlay state={gameState} {fps} onCommand={handleCommand} />
 
 		<div class="save-load">
 			<button onclick={handleSave}>Save</button>
 			<button onclick={handleLoad}>Load</button>
+			<button onclick={handleSpawnGnome}>+ Gnome</button>
 			{#if saveMessage}
 				<span class="save-message">{saveMessage}</span>
 			{/if}
@@ -213,90 +207,35 @@
 		height: 100%;
 	}
 
-	.hud {
-		position: absolute;
-		top: 10px;
-		left: 10px;
-		background: rgba(0, 0, 0, 0.7);
-		color: white;
-		padding: 10px;
-		border-radius: 4px;
-		font-family: monospace;
-		font-size: 12px;
-		pointer-events: none;
-	}
-
-	.hud-item {
-		margin-bottom: 4px;
-	}
-
-	.spawn-button {
-		margin-top: 8px;
-		background: #4a9a4a;
-		color: white;
-		border: none;
-		padding: 6px 12px;
-		border-radius: 4px;
-		cursor: pointer;
-		font-family: monospace;
-		font-size: 12px;
-		pointer-events: auto;
-	}
-
-	.spawn-button:hover {
-		background: #5aaa5a;
-	}
-
-	.paused {
-		color: #ff6b6b;
-		font-weight: bold;
-	}
-
-	.controls {
-		position: absolute;
-		bottom: 10px;
-		left: 10px;
-		background: rgba(0, 0, 0, 0.7);
-		color: white;
-		padding: 10px;
-		border-radius: 4px;
-		font-family: monospace;
-		font-size: 11px;
-		pointer-events: none;
-	}
-
-	.controls p {
-		margin: 2px 0;
-	}
-
 	.save-load {
 		position: absolute;
-		top: 10px;
+		top: 50px;
 		right: 10px;
-		background: rgba(0, 0, 0, 0.7);
+		background: rgba(0, 0, 0, 0.8);
 		color: white;
-		padding: 10px;
+		padding: 8px 12px;
 		border-radius: 4px;
 		display: flex;
 		gap: 8px;
 		align-items: center;
-		pointer-events: none;
+		pointer-events: auto;
+		z-index: 101;
 	}
 
 	.save-load button {
-		background: #4a90a4;
+		background: #333;
 		color: white;
-		border: none;
-		padding: 6px 12px;
+		border: 1px solid #555;
+		padding: 4px 8px;
 		border-radius: 4px;
 		cursor: pointer;
 		font-family: monospace;
 		font-size: 12px;
-		pointer-events: auto;
 	}
 
 	.save-load button:hover {
-		background: #5ba0b4;
+		background: #444;
+		border-color: #666;
 	}
 
 	.save-message {

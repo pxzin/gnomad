@@ -8,22 +8,47 @@
 import type { Entity } from '$lib/ecs/types';
 
 /**
- * Game speed multipliers.
+ * Game speed configuration.
+ * Centralized speed values - change here to affect the entire game.
  */
-export type GameSpeed = 0.5 | 1 | 2;
+export enum GameSpeed {
+	Normal = 1,
+	Fast = 2,
+	Faster = 3,
+	Fastest = 4 // Reserved for future use
+}
+
+/**
+ * All available game speeds for UI iteration.
+ * Add/remove speeds here to change what's available in the game.
+ */
+export const AVAILABLE_SPEEDS: GameSpeed[] = [GameSpeed.Normal, GameSpeed.Fast, GameSpeed.Faster];
+
+/**
+ * Speed display labels for UI.
+ */
+export const SPEED_LABELS: Record<GameSpeed, string> = {
+	[GameSpeed.Normal]: '1x',
+	[GameSpeed.Fast]: '2x',
+	[GameSpeed.Faster]: '3x',
+	[GameSpeed.Fastest]: '4x'
+};
 
 /**
  * All possible player commands.
  */
 export type Command =
-	| { type: 'SELECT_TILES'; tiles: { x: number; y: number }[] }
+	| { type: 'SELECT_TILES'; tiles: { x: number; y: number }[]; addToSelection: boolean }
 	| { type: 'DIG'; tiles: { x: number; y: number }[] }
 	| { type: 'CANCEL_TASK'; taskId: Entity }
 	| { type: 'PAN_CAMERA'; dx: number; dy: number }
-	| { type: 'ZOOM_CAMERA'; delta: number }
+	| { type: 'ZOOM_CAMERA'; delta: number; mouseX: number; mouseY: number; screenWidth: number; screenHeight: number }
 	| { type: 'SET_SPEED'; speed: GameSpeed }
 	| { type: 'TOGGLE_PAUSE' }
-	| { type: 'SPAWN_GNOME' };
+	| { type: 'SPAWN_GNOME' }
+	| { type: 'SELECT_GNOMES'; gnomeIds: Entity[]; addToSelection: boolean }
+	| { type: 'CLEAR_SELECTION' }
+	| { type: 'CANCEL_DIG'; tiles: { x: number; y: number }[] };
 
 /**
  * Command with tick timestamp for deterministic replay.
@@ -36,9 +61,11 @@ export interface CommandEnvelope {
 
 /**
  * Create a SELECT_TILES command.
+ * @param tiles - Array of tile coordinates to select
+ * @param addToSelection - If true, add to existing selection (Shift+click behavior)
  */
-export function selectTiles(tiles: { x: number; y: number }[]): Command {
-	return { type: 'SELECT_TILES', tiles };
+export function selectTiles(tiles: { x: number; y: number }[], addToSelection: boolean = false): Command {
+	return { type: 'SELECT_TILES', tiles, addToSelection };
 }
 
 /**
@@ -57,9 +84,20 @@ export function panCamera(dx: number, dy: number): Command {
 
 /**
  * Create a ZOOM_CAMERA command.
+ * @param delta - Zoom change amount (positive = zoom in, negative = zoom out)
+ * @param mouseX - Mouse X position on screen
+ * @param mouseY - Mouse Y position on screen
+ * @param screenWidth - Screen/canvas width
+ * @param screenHeight - Screen/canvas height
  */
-export function zoomCamera(delta: number): Command {
-	return { type: 'ZOOM_CAMERA', delta };
+export function zoomCamera(
+	delta: number,
+	mouseX: number,
+	mouseY: number,
+	screenWidth: number,
+	screenHeight: number
+): Command {
+	return { type: 'ZOOM_CAMERA', delta, mouseX, mouseY, screenWidth, screenHeight };
 }
 
 /**
@@ -81,4 +119,29 @@ export function togglePause(): Command {
  */
 export function spawnGnomeCommand(): Command {
 	return { type: 'SPAWN_GNOME' };
+}
+
+/**
+ * Create a SELECT_GNOMES command.
+ * @param gnomeIds - Array of gnome entity IDs to select
+ * @param addToSelection - If true, Shift+click behavior (toggle selection)
+ */
+export function selectGnomes(gnomeIds: Entity[], addToSelection: boolean = false): Command {
+	return { type: 'SELECT_GNOMES', gnomeIds, addToSelection };
+}
+
+/**
+ * Create a CLEAR_SELECTION command.
+ * Clears both tile and gnome selections.
+ */
+export function clearSelection(): Command {
+	return { type: 'CLEAR_SELECTION' };
+}
+
+/**
+ * Create a CANCEL_DIG command.
+ * Cancels dig tasks for the specified tiles.
+ */
+export function cancelDig(tiles: { x: number; y: number }[]): Command {
+	return { type: 'CANCEL_DIG', tiles };
 }

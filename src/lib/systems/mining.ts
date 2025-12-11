@@ -67,6 +67,14 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 			progress: 100
 		}));
 
+		// Remove destroyed tile from selection
+		const updatedSelectedTiles = state.selectedTiles.filter(
+			(t) => t.x !== task.targetX || t.y !== task.targetY
+		);
+		if (updatedSelectedTiles.length !== state.selectedTiles.length) {
+			state = { ...state, selectedTiles: updatedSelectedTiles };
+		}
+
 		// Complete task
 		return completeTask(state, gnomeEntity, gnome.currentTaskId);
 	} else {

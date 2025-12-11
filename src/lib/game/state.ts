@@ -13,7 +13,7 @@ import type { Gnome } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
 import type { Camera } from '$lib/components/camera';
 import { createCamera, CAMERA_LERP_SPEED, MIN_ZOOM, MAX_ZOOM } from '$lib/components/camera';
-import type { GameSpeed } from './commands';
+import { GameSpeed } from './commands';
 
 /**
  * Complete game state.
@@ -53,6 +53,8 @@ export interface GameState {
 
 	// Selection state (UI)
 	selectedTiles: { x: number; y: number }[];
+	/** Selected gnome entity IDs */
+	selectedGnomes: Entity[];
 }
 
 /**
@@ -69,7 +71,7 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		seed,
 		tick: 0,
 		isPaused: false,
-		speed: 1,
+		speed: GameSpeed.Normal,
 		nextEntityId: 1,
 		worldWidth: width,
 		worldHeight: height,
@@ -80,7 +82,8 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		gnomes: new Map(),
 		tasks: new Map(),
 		camera: createCamera((width * 16) / 2, (height * 16) / 2),
-		selectedTiles: []
+		selectedTiles: [],
+		selectedGnomes: []
 	};
 }
 
@@ -99,15 +102,49 @@ export function panCamera(state: GameState, dx: number, dy: number): GameState {
 }
 
 /**
- * Zoom the camera by a delta amount.
+ * Zoom the camera centered on mouse position.
+ * @param state - Current game state
+ * @param delta - Zoom change amount
+ * @param mouseX - Mouse X position on screen
+ * @param mouseY - Mouse Y position on screen
+ * @param screenWidth - Screen width
+ * @param screenHeight - Screen height
  */
-export function zoomCamera(state: GameState, delta: number): GameState {
-	const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, state.camera.zoom + delta));
+export function zoomCamera(
+	state: GameState,
+	delta: number,
+	mouseX: number,
+	mouseY: number,
+	screenWidth: number,
+	screenHeight: number
+): GameState {
+	const { camera } = state;
+	const oldZoom = camera.zoom;
+	const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom + delta));
+
+	// If zoom didn't change, no need to adjust camera position
+	if (newZoom === oldZoom) {
+		return state;
+	}
+
+	// Calculate world position under mouse before zoom
+	const worldXBeforeZoom = (mouseX - screenWidth / 2) / oldZoom + camera.targetX;
+	const worldYBeforeZoom = (mouseY - screenHeight / 2) / oldZoom + camera.targetY;
+
+	// Calculate world position under mouse after zoom (should be same point)
+	// worldX = (mouseX - screenWidth/2) / newZoom + newCameraX
+	// We want worldXBeforeZoom = worldXAfterZoom
+	// So: newCameraX = worldXBeforeZoom - (mouseX - screenWidth/2) / newZoom
+	const newTargetX = worldXBeforeZoom - (mouseX - screenWidth / 2) / newZoom;
+	const newTargetY = worldYBeforeZoom - (mouseY - screenHeight / 2) / newZoom;
+
 	return {
 		...state,
 		camera: {
-			...state.camera,
-			zoom: newZoom
+			...camera,
+			zoom: newZoom,
+			targetX: newTargetX,
+			targetY: newTargetY
 		}
 	};
 }
@@ -149,6 +186,7 @@ export interface SerializedGameState {
 	tasks: [number, Task][];
 	camera: Camera;
 	selectedTiles: { x: number; y: number }[];
+	selectedGnomes: number[];
 }
 
 /**
@@ -170,7 +208,8 @@ export function serialize(state: GameState): string {
 		gnomes: Array.from(state.gnomes.entries()),
 		tasks: Array.from(state.tasks.entries()),
 		camera: state.camera,
-		selectedTiles: state.selectedTiles
+		selectedTiles: state.selectedTiles,
+		selectedGnomes: state.selectedGnomes
 	};
 	return JSON.stringify(serialized);
 }
@@ -195,7 +234,8 @@ export function deserialize(json: string): GameState {
 		gnomes: new Map(data.gnomes),
 		tasks: new Map(data.tasks),
 		camera: data.camera,
-		selectedTiles: data.selectedTiles
+		selectedTiles: data.selectedTiles,
+		selectedGnomes: data.selectedGnomes ?? []
 	};
 }
 

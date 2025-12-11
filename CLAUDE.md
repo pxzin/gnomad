@@ -32,4 +32,34 @@ TypeScript 5.x (strict mode enabled): Follow standard conventions
 - 001-colony-sim-core: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x (app framework), PixiJS v8 (2D rendering with WebGPU/WebGL)
 
 <!-- MANUAL ADDITIONS START -->
+
+## Design Principles
+
+### DRY over Hardcoding
+Avoid hardcoding values that may change or are used in multiple places. Instead:
+- Use **enums** for discrete sets of values (e.g., `GameSpeed.Normal`, `GameSpeed.Fast`)
+- Use **constants arrays** for iteration (e.g., `AVAILABLE_SPEEDS`)
+- Use **lookup objects** for display values (e.g., `SPEED_LABELS`)
+
+This allows changing values in one place without hunting through the codebase.
+
+**Example pattern:**
+```typescript
+export enum GameSpeed {
+  Normal = 1,
+  Fast = 2,
+  Faster = 3
+}
+
+export const AVAILABLE_SPEEDS: GameSpeed[] = [GameSpeed.Normal, GameSpeed.Fast, GameSpeed.Faster];
+
+export const SPEED_LABELS: Record<GameSpeed, string> = {
+  [GameSpeed.Normal]: '1x',
+  [GameSpeed.Fast]: '2x',
+  [GameSpeed.Faster]: '3x'
+};
+```
+
+Balance KISS (Keep It Simple) with DRY (Don't Repeat Yourself) - simple code is good, but repeated magic values create maintenance burden.
+
 <!-- MANUAL ADDITIONS END -->

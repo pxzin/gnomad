@@ -20,7 +20,7 @@ import { spawnGnome } from './spawn';
 export function processCommand(state: GameState, command: Command): GameState {
 	switch (command.type) {
 		case 'SELECT_TILES':
-			return processSelectTiles(state, command.tiles);
+			return processSelectTiles(state, command.tiles, command.addToSelection);
 
 		case 'DIG':
 			return processDig(state, command.tiles);
@@ -32,7 +32,7 @@ export function processCommand(state: GameState, command: Command): GameState {
 			return panCamera(state, command.dx, command.dy);
 
 		case 'ZOOM_CAMERA':
-			return zoomCamera(state, command.delta);
+			return zoomCamera(state, command.delta, command.mouseX, command.mouseY, command.screenWidth, command.screenHeight);
 
 		case 'SET_SPEED':
 			return processSetSpeed(state, command.speed);
@@ -42,6 +42,15 @@ export function processCommand(state: GameState, command: Command): GameState {
 
 		case 'SPAWN_GNOME':
 			return processSpawnGnome(state);
+
+		case 'SELECT_GNOMES':
+			return processSelectGnomes(state, command.gnomeIds, command.addToSelection);
+
+		case 'CLEAR_SELECTION':
+			return processClearSelection(state);
+
+		case 'CANCEL_DIG':
+			return processCancelDig(state, command.tiles);
 
 		default:
 			return state;
@@ -53,12 +62,39 @@ export function processCommand(state: GameState, command: Command): GameState {
  */
 function processSelectTiles(
 	state: GameState,
-	tiles: { x: number; y: number }[]
+	tiles: { x: number; y: number }[],
+	addToSelection: boolean
 ): GameState {
-	return {
-		...state,
-		selectedTiles: tiles
-	};
+	if (addToSelection) {
+		// Add to existing selection, keep gnomes selected too
+		const existingTiles = state.selectedTiles;
+		const newTiles = [...existingTiles];
+
+		for (const tile of tiles) {
+			// Check if tile already selected
+			const index = newTiles.findIndex((t) => t.x === tile.x && t.y === tile.y);
+			if (index >= 0) {
+				// Toggle off - remove from selection
+				newTiles.splice(index, 1);
+			} else {
+				// Add to selection
+				newTiles.push(tile);
+			}
+		}
+
+		return {
+			...state,
+			selectedTiles: newTiles
+			// Keep selectedGnomes as is when adding to selection
+		};
+	} else {
+		// Replace selection, clear gnomes
+		return {
+			...state,
+			selectedTiles: tiles,
+			selectedGnomes: [] // Clear gnome selection when replacing
+		};
+	}
 }
 
 /**
@@ -173,4 +209,78 @@ function processSpawnGnome(state: GameState): GameState {
 		return result[0];
 	}
 	return state;
+}
+
+/**
+ * Process SELECT_GNOMES command.
+ */
+function processSelectGnomes(
+	state: GameState,
+	gnomeIds: number[],
+	addToSelection: boolean
+): GameState {
+	if (addToSelection) {
+		// Toggle selection: add if not present, remove if present
+		const newSelection = [...state.selectedGnomes];
+		for (const gnomeId of gnomeIds) {
+			const index = newSelection.indexOf(gnomeId);
+			if (index >= 0) {
+				// Remove from selection
+				newSelection.splice(index, 1);
+			} else {
+				// Add to selection (if gnome exists)
+				if (state.gnomes.has(gnomeId)) {
+					newSelection.push(gnomeId);
+				}
+			}
+		}
+		return {
+			...state,
+			selectedGnomes: newSelection,
+			// Clear tile selection when selecting gnomes
+			selectedTiles: []
+		};
+	} else {
+		// Replace selection with new gnomes (if they exist)
+		const validGnomes = gnomeIds.filter((id) => state.gnomes.has(id));
+		return {
+			...state,
+			selectedGnomes: validGnomes,
+			// Clear tile selection when selecting gnomes
+			selectedTiles: []
+		};
+	}
+}
+
+/**
+ * Process CLEAR_SELECTION command.
+ */
+function processClearSelection(state: GameState): GameState {
+	return {
+		...state,
+		selectedTiles: [],
+		selectedGnomes: []
+	};
+}
+
+/**
+ * Process CANCEL_DIG command.
+ * Cancels dig tasks for the specified tiles.
+ */
+function processCancelDig(
+	state: GameState,
+	tiles: { x: number; y: number }[]
+): GameState {
+	let currentState = state;
+
+	for (const { x, y } of tiles) {
+		// Find task at this position
+		const taskId = findTaskAtPosition(currentState, x, y);
+		if (taskId === null) continue;
+
+		// Cancel the task (reuse existing processCancelTask logic)
+		currentState = processCancelTask(currentState, taskId);
+	}
+
+	return currentState;
 }
