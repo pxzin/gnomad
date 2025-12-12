@@ -16,15 +16,24 @@
 		<div class="no-selection">Nenhuma seleção</div>
 	{:else if selectionInfo.type === 'single-tile'}
 		<div class="single-tile">
-			<div class="info-header">{getTileTypeName(selectionInfo.tile.tileType)}</div>
+			<div class="info-header" class:bedrock={selectionInfo.tile.isIndestructible}>
+				{getTileTypeName(selectionInfo.tile.tileType)}
+			</div>
 			<div class="info-row">
 				<span class="info-label">Position:</span>
 				<span class="info-value">({selectionInfo.tile.x}, {selectionInfo.tile.y})</span>
 			</div>
-			<div class="info-row">
-				<span class="info-label">Durability:</span>
-				<span class="info-value">{selectionInfo.tile.durability}/{selectionInfo.tile.maxDurability}</span>
-			</div>
+			{#if selectionInfo.tile.isIndestructible}
+				<div class="info-row">
+					<span class="info-label">Durability:</span>
+					<span class="info-value indestructible">Indestructible</span>
+				</div>
+			{:else}
+				<div class="info-row">
+					<span class="info-label">Durability:</span>
+					<span class="info-value">{selectionInfo.tile.durability}/{selectionInfo.tile.maxDurability}</span>
+				</div>
+			{/if}
 			{#if selectionInfo.tile.hasDigTask}
 				<div class="info-row task-status">
 					<span class="task-badge">Dig Task</span>
@@ -96,6 +105,10 @@
 		color: #4a90a4;
 	}
 
+	.info-header.bedrock {
+		color: #333;
+	}
+
 	.info-row {
 		display: flex;
 		justify-content: space-between;
@@ -113,6 +126,11 @@
 
 	.info-value.idle {
 		color: #888;
+		font-style: italic;
+	}
+
+	.info-value.indestructible {
+		color: #333;
 		font-style: italic;
 	}
 

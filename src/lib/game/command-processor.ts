@@ -10,8 +10,8 @@ import { panCamera, zoomCamera } from './state';
 import type { Command, GameSpeed } from './commands';
 import { createDigTask, TaskPriority } from '$lib/components/task';
 import { createEntity, addTask } from '$lib/ecs/world';
-import { getTileAt, isSolid } from '$lib/world-gen/generator';
-import { TileType } from '$lib/components/tile';
+import { getTileAt, isSolid, isWorldBoundary } from '$lib/world-gen/generator';
+import { TileType, isIndestructible } from '$lib/components/tile';
 import { spawnGnome } from './spawn';
 
 /**
@@ -114,6 +114,9 @@ function processDig(
 
 		const tile = currentState.tiles.get(tileEntity);
 		if (!tile || tile.type === TileType.Air) continue;
+
+		// Check if tile is indestructible (bedrock or world boundary)
+		if (isIndestructible(tile.type) || isWorldBoundary(currentState, x, y)) continue;
 
 		// Check if task already exists for this tile
 		const existingTask = findTaskAtPosition(currentState, x, y);

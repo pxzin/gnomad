@@ -16,6 +16,7 @@ import {
 	TASK_MARKER_ALPHA,
 	SKY_COLOR
 } from '$lib/config/colors';
+import { isWorldBoundary } from '$lib/world-gen/generator';
 
 /**
  * Tile size in pixels.
@@ -198,9 +199,13 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 
 			visibleTiles.add(entity);
 
+			// Determine display type (world boundaries render as Bedrock)
+			const isBoundary = isWorldBoundary(state, x, y);
+			const displayType = isBoundary ? TileType.Bedrock : tile.type;
+
 			// Check cache for dirty checking
 			const cached = renderer.tileCache.get(entity);
-			if (cached && cached.type === tile.type && cached.x === x && cached.y === y) {
+			if (cached && cached.type === displayType && cached.x === x && cached.y === y) {
 				// Tile unchanged, skip redraw
 				continue;
 			}
@@ -212,8 +217,8 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 				renderer.tileGraphics.set(entity, graphics);
 			}
 
-			// Draw tile
-			const config = TILE_CONFIG[tile.type];
+			// Draw tile with appropriate color
+			const config = TILE_CONFIG[displayType];
 			graphics.clear();
 			graphics.rect(0, 0, TILE_SIZE, TILE_SIZE);
 			graphics.fill(config.color);
@@ -221,8 +226,8 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 			graphics.x = x * TILE_SIZE;
 			graphics.y = y * TILE_SIZE;
 
-			// Update cache
-			renderer.tileCache.set(entity, { graphics, type: tile.type, x, y });
+			// Update cache with display type
+			renderer.tileCache.set(entity, { graphics, type: displayType, x, y });
 		}
 	}
 

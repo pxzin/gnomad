@@ -9,8 +9,8 @@ import type { Entity } from '$lib/ecs/types';
 import { getEntitiesWithGnome, updateGnome, updateTask, updateTile } from '$lib/ecs/world';
 import { GnomeState, GNOME_MINE_RATE } from '$lib/components/gnome';
 import { TaskType } from '$lib/components/task';
-import { TileType, createAirTile } from '$lib/components/tile';
-import { getTileAt } from '$lib/world-gen/generator';
+import { TileType, createAirTile, isIndestructible } from '$lib/components/tile';
+import { getTileAt, isWorldBoundary } from '$lib/world-gen/generator';
 
 /**
  * Mining system update.
@@ -51,6 +51,12 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 	const tile = state.tiles.get(tileEntity);
 	if (!tile || tile.type === TileType.Air) {
 		// Tile is already air, complete task
+		return completeTask(state, gnomeEntity, gnome.currentTaskId);
+	}
+
+	// Check if tile is indestructible (bedrock or world boundary)
+	if (isIndestructible(tile.type) || isWorldBoundary(state, task.targetX, task.targetY)) {
+		// Cannot mine this tile, cancel task and return gnome to idle
 		return completeTask(state, gnomeEntity, gnome.currentTaskId);
 	}
 

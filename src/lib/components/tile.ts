@@ -10,7 +10,9 @@
 export enum TileType {
 	Air = 0,
 	Dirt = 1,
-	Stone = 2
+	Stone = 2,
+	/** Indestructible barrier at world edges */
+	Bedrock = 3
 }
 
 /**
@@ -41,8 +43,16 @@ export interface TileConfig {
 export const TILE_CONFIG: Record<TileType, TileConfig> = {
 	[TileType.Air]: { durability: 0, color: 0x87ceeb, mineTicks: 0 },
 	[TileType.Dirt]: { durability: 100, color: 0x8b4513, mineTicks: 30 },
-	[TileType.Stone]: { durability: 200, color: 0x808080, mineTicks: 90 }
+	[TileType.Stone]: { durability: 200, color: 0x808080, mineTicks: 90 },
+	[TileType.Bedrock]: { durability: Infinity, color: 0x1a1a1a, mineTicks: Infinity }
 };
+
+/**
+ * Check if a tile type is indestructible.
+ */
+export function isIndestructible(type: TileType): boolean {
+	return type === TileType.Bedrock;
+}
 
 /**
  * Create a new Tile component.

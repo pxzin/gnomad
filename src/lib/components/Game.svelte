@@ -14,6 +14,7 @@
 	import { physicsSystem } from '$lib/systems/physics';
 	import { taskAssignmentSystem } from '$lib/systems/task-assignment';
 	import { miningSystem } from '$lib/systems/mining';
+	import { boundsSystem } from '$lib/systems/bounds';
 	import {
 		createRenderer,
 		destroyRenderer,
@@ -49,7 +50,7 @@
 	let inputHandlers: InputHandlers | null = null;
 
 	// Systems to run each tick
-	const systems = [physicsSystem, taskAssignmentSystem, miningSystem];
+	const systems = [physicsSystem, taskAssignmentSystem, miningSystem, boundsSystem];
 
 	// Initialize game
 	onMount(() => {

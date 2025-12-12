@@ -116,6 +116,14 @@ export function isInBounds(state: GameState, x: number, y: number): boolean {
 }
 
 /**
+ * Check if a position is at the world boundary (edge tiles).
+ * These tiles are treated as indestructible bedrock.
+ */
+export function isWorldBoundary(state: GameState, x: number, y: number): boolean {
+	return x === 0 || x === state.worldWidth - 1 || y === 0 || y === state.worldHeight - 1;
+}
+
+/**
  * Check if a tile position is solid (not air).
  */
 export function isSolid(state: GameState, x: number, y: number): boolean {

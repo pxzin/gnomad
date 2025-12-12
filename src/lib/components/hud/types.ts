@@ -7,7 +7,8 @@
 import type { Entity } from '$lib/ecs/types';
 import type { GameState } from '$lib/game/state';
 import { GnomeState } from '$lib/components/gnome';
-import { TileType, TILE_CONFIG } from '$lib/components/tile';
+import { TileType, TILE_CONFIG, isIndestructible } from '$lib/components/tile';
+import { isWorldBoundary } from '$lib/world-gen/generator';
 
 // ============================================================================
 // TaskProgress
@@ -51,7 +52,7 @@ export interface TileInfo {
 	x: number;
 	/** Grid Y coordinate */
 	y: number;
-	/** Tile type (dirt or stone) */
+	/** Tile type (dirt, stone, bedrock) */
 	tileType: TileType;
 	/** Current durability */
 	durability: number;
@@ -59,6 +60,8 @@ export interface TileInfo {
 	maxDurability: number;
 	/** Whether this tile has an active dig task */
 	hasDigTask: boolean;
+	/** Whether this tile cannot be mined */
+	isIndestructible: boolean;
 }
 
 export interface GnomeInfo {
@@ -153,15 +156,23 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 				}
 			}
 
+			// Check if tile is indestructible (world boundary or bedrock type)
+			const isBoundary = isWorldBoundary(state, coord.x, coord.y);
+			const tileIsIndestructible = isBoundary || isIndestructible(tile.type);
+
+			// Display as Bedrock if it's a world boundary
+			const displayType = isBoundary ? TileType.Bedrock : tile.type;
+
 			return {
 				type: 'single-tile',
 				tile: {
 					x: coord.x,
 					y: coord.y,
-					tileType: tile.type,
-					durability: tile.durability,
-					maxDurability: TILE_CONFIG[tile.type].durability,
-					hasDigTask
+					tileType: displayType,
+					durability: tileIsIndestructible ? Infinity : tile.durability,
+					maxDurability: TILE_CONFIG[displayType].durability,
+					hasDigTask,
+					isIndestructible: tileIsIndestructible
 				}
 			};
 		}
@@ -259,6 +270,16 @@ export function computeAvailableActions(state: GameState): AvailableActions {
 
 	// Categorize each selected tile
 	for (const coord of selectedTiles) {
+		// Skip indestructible tiles (world boundaries)
+		if (isWorldBoundary(state, coord.x, coord.y)) continue;
+
+		// Check tile type for bedrock
+		const tileEntity = state.tileGrid[coord.y]?.[coord.x];
+		if (tileEntity) {
+			const tile = state.tiles.get(tileEntity);
+			if (tile && isIndestructible(tile.type)) continue;
+		}
+
 		const key = `${coord.x},${coord.y}`;
 		if (tilesWithTasks.has(key)) {
 			result.cancelTiles.push({ x: coord.x, y: coord.y });
@@ -284,6 +305,8 @@ export function getTileTypeName(type: TileType): string {
 			return 'Stone';
 		case TileType.Air:
 			return 'Air';
+		case TileType.Bedrock:
+			return 'Bedrock';
 		default:
 			return 'Unknown';
 	}
