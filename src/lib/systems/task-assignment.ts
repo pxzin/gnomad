@@ -12,12 +12,22 @@ import type { Position } from '$lib/components/position';
 import { getEntitiesWithGnome, getEntitiesWithTask, updateGnome, updateTask } from '$lib/ecs/world';
 import { GnomeState } from '$lib/components/gnome';
 import { findPath } from './pathfinding';
+import {
+	TASK_ASSIGNMENT_THROTTLE_TICKS,
+	MAX_PATHFIND_ATTEMPTS_PER_GNOME
+} from '$lib/config/performance';
 
 /**
  * Task assignment system update.
  * Assigns the highest priority unassigned task to each idle gnome.
+ * Throttled to run every TASK_ASSIGNMENT_THROTTLE_TICKS ticks for performance.
  */
 export function taskAssignmentSystem(state: GameState): GameState {
+	// Throttle: only run every N ticks to reduce CPU load
+	if (state.tick % TASK_ASSIGNMENT_THROTTLE_TICKS !== 0) {
+		return state;
+	}
+
 	let currentState = state;
 
 	// Find idle gnomes
@@ -118,20 +128,29 @@ interface ReachableTaskResult {
 /**
  * Find a reachable task for a gnome.
  * Tries tasks in priority order and returns the first one with a valid path.
+ * Limited to MAX_PATHFIND_ATTEMPTS_PER_GNOME attempts to prevent CPU overload.
  */
 function findReachableTask(
 	state: GameState,
-	gnomeEntity: Entity,
+	_gnomeEntity: Entity,
 	gnomeX: number,
 	gnomeY: number,
 	tasks: [Entity, Task][]
 ): ReachableTaskResult | null {
+	let attempts = 0;
+
 	// Try each task in priority order until we find one we can reach
 	for (let i = 0; i < tasks.length; i++) {
+		// Stop after max attempts to prevent CPU overload with many unreachable tasks
+		if (attempts >= MAX_PATHFIND_ATTEMPTS_PER_GNOME) {
+			break;
+		}
+
 		const [taskEntity, task] = tasks[i]!;
 
 		// Calculate path to task
 		const path = findPath(state, gnomeX, gnomeY, task.targetX, task.targetY);
+		attempts++;
 
 		if (path && path.length > 0) {
 			return {

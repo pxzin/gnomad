@@ -3,11 +3,17 @@
  *
  * A* pathfinding for gnome navigation.
  * Supports walking, climbing, and vertical shaft traversal.
+ *
+ * Performance optimized with:
+ * - Binary heap for O(log n) open set operations
+ * - Map-based lookups for O(1) duplicate checking
+ * - Numeric keys to avoid string allocation
  */
 
 import type { GameState } from '$lib/game/state';
 import type { Position } from '$lib/components/position';
 import { isWalkable, isSolid, isInBounds } from '$lib/world-gen/generator';
+import { createBinaryHeap } from '$lib/utils/binary-heap';
 
 /**
  * Movement costs.
@@ -40,8 +46,21 @@ interface PathNode {
 }
 
 /**
+ * Create numeric key for position (avoids string allocation).
+ * Supports coordinates up to 9999 (sufficient for game world).
+ */
+function posKey(x: number, y: number): number {
+	return x * 10000 + y;
+}
+
+/**
  * Find a path from start to end position.
  * Returns array of positions to follow, or null if no path exists.
+ *
+ * Optimized with:
+ * - Binary heap for O(log n) open set operations
+ * - Map-based lookups for O(1) duplicate checking
+ * - Numeric keys to avoid string allocation
  */
 export function findPath(
 	state: GameState,
@@ -63,9 +82,10 @@ export function findPath(
 		return [{ x: endX, y: endY }];
 	}
 
-	// A* pathfinding
-	const openSet: PathNode[] = [];
-	const closedSet = new Set<string>();
+	// A* pathfinding with binary heap (O(log n) operations)
+	const openSet = createBinaryHeap<PathNode>((a, b) => a.f - b.f);
+	const openSetMap = new Map<number, PathNode>(); // O(1) lookup for existing nodes
+	const closedSet = new Set<number>(); // Numeric keys avoid string allocation
 
 	const startNode: PathNode = {
 		x: startX,
@@ -77,53 +97,58 @@ export function findPath(
 	};
 	startNode.f = startNode.g + startNode.h;
 	openSet.push(startNode);
+	openSetMap.set(posKey(startX, startY), startNode);
 
 	const maxIterations = 1000; // Prevent infinite loops
 	let iterations = 0;
 
-	while (openSet.length > 0 && iterations < maxIterations) {
+	while (!openSet.isEmpty && iterations < maxIterations) {
 		iterations++;
 
-		// Find node with lowest f cost
-		openSet.sort((a, b) => a.f - b.f);
-		const current = openSet.shift()!;
+		// Get node with lowest f cost - O(log n) with binary heap
+		const current = openSet.pop()!;
+		const currentKey = posKey(current.x, current.y);
+		openSetMap.delete(currentKey);
 
 		// Check if we reached the goal
 		if (current.x === endX && current.y === endY) {
 			return reconstructPath(current);
 		}
 
-		closedSet.add(`${current.x},${current.y}`);
+		closedSet.add(currentKey);
 
 		// Check neighbors
 		const neighbors = getNeighbors(state, current.x, current.y);
 		for (const neighbor of neighbors) {
-			const key = `${neighbor.x},${neighbor.y}`;
+			const key = posKey(neighbor.x, neighbor.y);
 			if (closedSet.has(key)) continue;
 
 			const g = current.g + neighbor.cost; // Variable cost based on movement type
 			const h = heuristic(neighbor.x, neighbor.y, endX, endY);
 			const f = g + h;
 
-			// Check if already in open set with better cost
-			const existingIndex = openSet.findIndex((n) => n.x === neighbor.x && n.y === neighbor.y);
-			if (existingIndex !== -1) {
-				if (g < openSet[existingIndex]!.g) {
-					openSet[existingIndex]!.g = g;
-					openSet[existingIndex]!.f = f;
-					openSet[existingIndex]!.parent = current;
+			// Check if already in open set - O(1) with Map lookup
+			const existing = openSetMap.get(key);
+			if (existing) {
+				if (g < existing.g) {
+					// Update existing node (heap will reorder on next pop)
+					existing.g = g;
+					existing.f = f;
+					existing.parent = current;
 				}
 				continue;
 			}
 
-			openSet.push({
+			const newNode: PathNode = {
 				x: neighbor.x,
 				y: neighbor.y,
 				g,
 				h,
 				f,
 				parent: current
-			});
+			};
+			openSet.push(newNode);
+			openSetMap.set(key, newNode);
 		}
 	}
 

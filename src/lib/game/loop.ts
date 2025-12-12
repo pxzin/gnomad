@@ -9,6 +9,7 @@ import type { GameState } from './state';
 import { updateCamera } from './state';
 import type { Command } from './commands';
 import { TICKS_PER_SECOND, MS_PER_TICK } from '$lib/config/timing';
+import { MAX_TICKS_PER_FRAME } from '$lib/config/performance';
 
 // Re-export for backwards compatibility
 export { TICKS_PER_SECOND, MS_PER_TICK };
@@ -116,8 +117,9 @@ export function startLoop(
 		loop.lastTime = currentTime;
 		loop.accumulator += deltaTime * loop.state.speed;
 
-		// Process fixed timestep updates
-		while (loop.accumulator >= MS_PER_TICK) {
+		// Process fixed timestep updates (limited per frame for performance)
+		let ticksThisFrame = 0;
+		while (loop.accumulator >= MS_PER_TICK && ticksThisFrame < MAX_TICKS_PER_FRAME) {
 			const [newState, remainingCommands] = processTick(
 				loop.state,
 				loop.commandQueue,
@@ -127,6 +129,12 @@ export function startLoop(
 			loop.state = newState;
 			loop.commandQueue = remainingCommands;
 			loop.accumulator -= MS_PER_TICK;
+			ticksThisFrame++;
+		}
+
+		// Clamp accumulator to prevent spiral of death at high speeds
+		if (loop.accumulator > MS_PER_TICK * MAX_TICKS_PER_FRAME) {
+			loop.accumulator = MS_PER_TICK * MAX_TICKS_PER_FRAME;
 		}
 
 		// Render with interpolation

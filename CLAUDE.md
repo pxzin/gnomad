@@ -126,4 +126,39 @@ Every new file must follow these patterns:
 - All exported functions must have explicit return types
 - Use `unknown` instead of `any` when possible
 
+### Performance Optimization Patterns
+
+Follow these patterns for game performance:
+
+**Algorithm Complexity**:
+- Use binary heaps (`src/lib/utils/binary-heap.ts`) for priority queues - O(log n) vs O(n log n) for sorted arrays
+- Use Map-based lookups for O(1) access instead of array.find() O(n)
+- Use numeric keys (`x * 10000 + y`) instead of string keys to avoid GC pressure
+
+**Throttling and Limiting**:
+- Expensive systems should run every N ticks (see `TASK_ASSIGNMENT_THROTTLE_TICKS`)
+- Limit iterations per frame (see `MAX_PATHFIND_ATTEMPTS_PER_GNOME`)
+- Constants go in `src/lib/config/performance.ts`
+
+**Rendering Optimization**:
+- Use dirty checking - only redraw entities that changed
+- Cache previous state (position, type) to detect changes
+- Batch draw calls - single stroke() for multiple shapes
+- Create Graphics objects once, update position only
+
+**Example - Dirty Checking Pattern**:
+```typescript
+interface Cache { x: number; y: number; type: number; }
+const cache = new Map<number, Cache>();
+
+function render(entity: number, newX: number, newY: number) {
+  const cached = cache.get(entity);
+  if (cached && cached.x === newX && cached.y === newY) {
+    return; // Skip redraw
+  }
+  // ... actual render
+  cache.set(entity, { x: newX, y: newY, type });
+}
+```
+
 <!-- MANUAL ADDITIONS END -->

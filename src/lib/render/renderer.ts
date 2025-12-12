@@ -23,6 +23,25 @@ import {
 export const TILE_SIZE = 16;
 
 /**
+ * Cached tile state for dirty checking.
+ */
+interface TileCache {
+	graphics: Graphics;
+	type: number; // Tile type to detect changes
+	x: number;
+	y: number;
+}
+
+/**
+ * Cached gnome state for dirty checking.
+ */
+interface GnomeCache {
+	graphics: Graphics;
+	x: number;
+	y: number;
+}
+
+/**
  * Renderer state.
  */
 export interface Renderer {
@@ -34,6 +53,10 @@ export interface Renderer {
 	gnomeGraphics: Map<number, Graphics>;
 	selectionGraphics: Graphics;
 	taskMarkerGraphics: Graphics;
+	/** Cached tile state for dirty checking */
+	tileCache: Map<number, TileCache>;
+	/** Cached gnome positions for dirty checking */
+	gnomeCache: Map<number, GnomeCache>;
 }
 
 /**
@@ -75,7 +98,9 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		tileGraphics: new Map(),
 		gnomeGraphics: new Map(),
 		selectionGraphics,
-		taskMarkerGraphics
+		taskMarkerGraphics,
+		tileCache: new Map(),
+		gnomeCache: new Map()
 	};
 }
 
@@ -93,6 +118,8 @@ export function destroyRenderer(renderer: Renderer): void {
 	renderer.app.destroy(true);
 	renderer.tileGraphics.clear();
 	renderer.gnomeGraphics.clear();
+	renderer.tileCache.clear();
+	renderer.gnomeCache.clear();
 }
 
 /**
@@ -140,6 +167,7 @@ export function render(renderer: Renderer, state: GameState, interpolation: numb
 
 /**
  * Render all tiles.
+ * Uses dirty checking to skip redraws for unchanged tiles.
  */
 function renderTiles(renderer: Renderer, state: GameState): void {
 	const visibleTiles = new Set<number>();
@@ -170,6 +198,13 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 
 			visibleTiles.add(entity);
 
+			// Check cache for dirty checking
+			const cached = renderer.tileCache.get(entity);
+			if (cached && cached.type === tile.type && cached.x === x && cached.y === y) {
+				// Tile unchanged, skip redraw
+				continue;
+			}
+
 			let graphics = renderer.tileGraphics.get(entity);
 			if (!graphics) {
 				graphics = new Graphics();
@@ -185,6 +220,9 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 
 			graphics.x = x * TILE_SIZE;
 			graphics.y = y * TILE_SIZE;
+
+			// Update cache
+			renderer.tileCache.set(entity, { graphics, type: tile.type, x, y });
 		}
 	}
 
@@ -194,12 +232,14 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 			renderer.worldContainer.removeChild(graphics);
 			graphics.destroy();
 			renderer.tileGraphics.delete(entity);
+			renderer.tileCache.delete(entity);
 		}
 	}
 }
 
 /**
  * Render all gnomes.
+ * Uses dirty checking to skip redraws for gnomes that haven't moved.
  */
 function renderGnomes(renderer: Renderer, state: GameState, interpolation: number): void {
 	const activeGnomes = new Set<number>();
@@ -210,21 +250,34 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 		const position = state.positions.get(entity);
 		if (!position) continue;
 
+		// Calculate screen position
+		const screenX = position.x * TILE_SIZE + TILE_SIZE * 0.1;
+		const screenY = position.y * TILE_SIZE + TILE_SIZE * 0.1;
+
+		// Check cache for dirty checking
+		const cached = renderer.gnomeCache.get(entity);
+		if (cached && cached.x === screenX && cached.y === screenY) {
+			// Gnome hasn't moved, just update position (no redraw needed)
+			continue;
+		}
+
 		let graphics = renderer.gnomeGraphics.get(entity);
 		if (!graphics) {
 			graphics = new Graphics();
 			renderer.entityContainer.addChild(graphics);
 			renderer.gnomeGraphics.set(entity, graphics);
+
+			// Only draw once when created (gnomes don't change appearance)
+			graphics.rect(0, 0, TILE_SIZE * 0.8, TILE_SIZE * 0.8);
+			graphics.fill(GNOME_COLOR);
 		}
 
-		// Draw gnome (colored square)
-		graphics.clear();
-		graphics.rect(0, 0, TILE_SIZE * 0.8, TILE_SIZE * 0.8);
-		graphics.fill(GNOME_COLOR);
+		// Update position
+		graphics.x = screenX;
+		graphics.y = screenY;
 
-		// Position gnome (centered in tile)
-		graphics.x = position.x * TILE_SIZE + TILE_SIZE * 0.1;
-		graphics.y = position.y * TILE_SIZE + TILE_SIZE * 0.1;
+		// Update cache
+		renderer.gnomeCache.set(entity, { graphics, x: screenX, y: screenY });
 	}
 
 	// Remove gnomes that no longer exist
@@ -233,6 +286,7 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 			renderer.entityContainer.removeChild(graphics);
 			graphics.destroy();
 			renderer.gnomeGraphics.delete(entity);
+			renderer.gnomeCache.delete(entity);
 		}
 	}
 }
@@ -253,10 +307,14 @@ function renderSelection(renderer: Renderer, state: GameState): void {
 
 /**
  * Render task markers (dig designations).
+ * Batched: draws all rects first, then strokes once for performance.
  */
 function renderTaskMarkers(renderer: Renderer, state: GameState): void {
 	renderer.taskMarkerGraphics.clear();
 
+	if (state.tasks.size === 0) return;
+
+	// Batch all markers into a single path
 	for (const [, task] of state.tasks) {
 		renderer.taskMarkerGraphics.rect(
 			task.targetX * TILE_SIZE + 2,
@@ -264,8 +322,14 @@ function renderTaskMarkers(renderer: Renderer, state: GameState): void {
 			TILE_SIZE - 4,
 			TILE_SIZE - 4
 		);
-		renderer.taskMarkerGraphics.stroke({ color: TASK_MARKER_COLOR, width: 2, alpha: TASK_MARKER_ALPHA });
 	}
+
+	// Single stroke call for all markers (major performance improvement)
+	renderer.taskMarkerGraphics.stroke({
+		color: TASK_MARKER_COLOR,
+		width: 2,
+		alpha: TASK_MARKER_ALPHA
+	});
 }
 
 /**

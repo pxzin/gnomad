@@ -27,9 +27,9 @@
 
 **Purpose**: Create performance config and utility files
 
-- [ ] T001 Create performance config file at `src/lib/config/performance.ts` with TASK_ASSIGNMENT_THROTTLE_TICKS, MAX_PATHFIND_ATTEMPTS_PER_GNOME constants
-- [ ] T002 Update barrel file `src/lib/config/index.ts` to export performance module
-- [ ] T003 [P] Create utils directory structure with `src/lib/utils/binary-heap.ts` (empty placeholder)
+- [x] T001 Create performance config file at `src/lib/config/performance.ts` with TASK_ASSIGNMENT_THROTTLE_TICKS, MAX_PATHFIND_ATTEMPTS_PER_GNOME constants
+- [x] T002 Update barrel file `src/lib/config/index.ts` to export performance module
+- [x] T003 [P] Create utils directory structure with `src/lib/utils/binary-heap.ts` (empty placeholder)
 
 **Checkpoint**: Config structure ready for optimization implementations
 
@@ -41,8 +41,8 @@
 
 **⚠️ Note**: Binary heap is used by US3 (Pathfinding) but created here as it's a reusable utility
 
-- [ ] T004 Implement BinaryHeap class in `src/lib/utils/binary-heap.ts` with push, pop, peek, size, isEmpty, clear methods
-- [ ] T005 Run `pnpm check` to validate BinaryHeap types
+- [x] T004 Implement BinaryHeap class in `src/lib/utils/binary-heap.ts` with push, pop, peek, size, isEmpty, clear methods
+- [x] T005 Run `pnpm check` to validate BinaryHeap types
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -56,10 +56,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Add throttling to `src/lib/systems/task-assignment.ts` - check `tick % TASK_ASSIGNMENT_THROTTLE_TICKS`
-- [ ] T007 [US1] Add pathfinding attempt limit to `findReachableTask` in `src/lib/systems/task-assignment.ts` - max MAX_PATHFIND_ATTEMPTS_PER_GNOME attempts
-- [ ] T008 [US1] Batch task marker rendering in `src/lib/render/renderer.ts` - single stroke() call for all markers
-- [ ] T009 [US1] Run `pnpm check` to validate US1 changes
+- [x] T006 [US1] Add throttling to `src/lib/systems/task-assignment.ts` - check `tick % TASK_ASSIGNMENT_THROTTLE_TICKS`
+- [x] T007 [US1] Add pathfinding attempt limit to `findReachableTask` in `src/lib/systems/task-assignment.ts` - max MAX_PATHFIND_ATTEMPTS_PER_GNOME attempts
+- [x] T008 [US1] Batch task marker rendering in `src/lib/render/renderer.ts` - single stroke() call for all markers
+- [x] T009 [US1] Run `pnpm check` to validate US1 changes
 - [ ] T010 [US1] Manual test: Verify FPS with 44 gnomes + 2000 tasks (baseline improvement)
 
 **Checkpoint**: Core performance issue resolved. Game should be playable at scale.
@@ -91,10 +91,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Replace array-based openSet with BinaryHeap in `src/lib/systems/pathfinding.ts`
-- [ ] T016 [US3] Add Map-based lookup for openSet nodes in `src/lib/systems/pathfinding.ts` (numeric key: x*10000+y)
-- [ ] T017 [US3] Replace string keys in closedSet with numeric keys in `src/lib/systems/pathfinding.ts`
-- [ ] T018 [US3] Run `pnpm check` to validate US3 changes
+- [x] T015 [US3] Replace array-based openSet with BinaryHeap in `src/lib/systems/pathfinding.ts`
+- [x] T016 [US3] Add Map-based lookup for openSet nodes in `src/lib/systems/pathfinding.ts` (numeric key: x*10000+y)
+- [x] T017 [US3] Replace string keys in closedSet with numeric keys in `src/lib/systems/pathfinding.ts`
+- [x] T018 [US3] Run `pnpm check` to validate US3 changes
 - [ ] T019 [US3] Manual test: 50 gnomes pathfinding simultaneously - FPS stays at 55+
 
 **Checkpoint**: Pathfinding is significantly faster with O(log n) heap operations.
@@ -109,9 +109,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Add position tracking to gnome rendering in `src/lib/render/renderer.ts` - only clear/redraw if position changed
-- [ ] T021 [US4] Add color tracking to tile rendering in `src/lib/render/renderer.ts` - skip redraw if tile unchanged
-- [ ] T022 [US4] Run `pnpm check` to validate US4 changes
+- [x] T020 [US4] Add position tracking to gnome rendering in `src/lib/render/renderer.ts` - only clear/redraw if position changed
+- [x] T021 [US4] Add color tracking to tile rendering in `src/lib/render/renderer.ts` - skip redraw if tile unchanged
+- [x] T022 [US4] Run `pnpm check` to validate US4 changes
 - [ ] T023 [US4] Manual test: Camera panning with 100+ entities - smooth, no stuttering
 
 **Checkpoint**: Rendering is efficient with minimal unnecessary redraws.
@@ -122,8 +122,8 @@
 
 **Purpose**: Final validation and documentation
 
-- [ ] T024 [P] Update CLAUDE.md with performance optimization patterns
-- [ ] T025 Run `pnpm check` final validation
+- [x] T024 [P] Update CLAUDE.md with performance optimization patterns
+- [x] T025 Run `pnpm check` final validation
 - [ ] T026 Manual test: Full scenario - 100 gnomes, 2000 tasks, camera panning - 55+ FPS
 - [ ] T027 Run quickstart.md validation checklist
 

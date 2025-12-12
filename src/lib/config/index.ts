@@ -9,3 +9,4 @@ export * from './colors';
 export * from './physics';
 export * from './timing';
 export * from './input';
+export * from './performance';
