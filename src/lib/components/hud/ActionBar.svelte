@@ -2,7 +2,7 @@
 	import type { GameState } from '$lib/game/state';
 	import type { Command } from '$lib/game/commands';
 	import { dig, cancelDig } from '$lib/game/commands';
-	import { computeActionButtonState } from './types';
+	import { computeAvailableActions } from './types';
 
 	interface Props {
 		state: GameState;
@@ -11,15 +11,17 @@
 
 	let { state, onCommand }: Props = $props();
 
-	let actionButton = $derived(computeActionButtonState(state));
+	let actions = $derived(computeAvailableActions(state));
 
-	function handleAction() {
-		if (!actionButton.enabled) return;
+	function handleDig() {
+		if (actions.canDig) {
+			onCommand(dig(actions.digTiles));
+		}
+	}
 
-		if (actionButton.action === 'dig') {
-			onCommand(dig(state.selectedTiles));
-		} else {
-			onCommand(cancelDig(state.selectedTiles));
+	function handleCancelDig() {
+		if (actions.canCancelDig) {
+			onCommand(cancelDig(actions.cancelTiles));
 		}
 	}
 </script>
@@ -27,12 +29,21 @@
 <div class="action-bar">
 	<button
 		class="action-button"
-		class:enabled={actionButton.enabled}
-		disabled={!actionButton.enabled}
-		onclick={handleAction}
-		title={actionButton.label}
+		class:enabled={actions.canDig}
+		disabled={!actions.canDig}
+		onclick={handleDig}
+		title="Dig selected tiles"
 	>
-		{actionButton.label}
+		Dig (D)
+	</button>
+	<button
+		class="action-button cancel"
+		class:enabled={actions.canCancelDig}
+		disabled={!actions.canCancelDig}
+		onclick={handleCancelDig}
+		title="Cancel dig tasks"
+	>
+		Cancel (X)
 	</button>
 </div>
 
@@ -41,6 +52,8 @@
 		background: rgba(0, 0, 0, 0.8);
 		padding: 8px 12px;
 		border-radius: 4px;
+		display: flex;
+		gap: 8px;
 	}
 
 	.action-button {
@@ -66,5 +79,15 @@
 	.action-button.enabled:hover {
 		background: #5aaa5a;
 		border-color: #6aba6a;
+	}
+
+	.action-button.cancel.enabled {
+		background: #9a4a4a;
+		border-color: #aa5a5a;
+	}
+
+	.action-button.cancel.enabled:hover {
+		background: #aa5a5a;
+		border-color: #ba6a6a;
 	}
 </style>

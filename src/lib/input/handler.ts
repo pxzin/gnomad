@@ -21,6 +21,7 @@ import {
 	AVAILABLE_SPEEDS
 } from '$lib/game/commands';
 import { TileType } from '$lib/components/tile';
+import { computeAvailableActions } from '$lib/components/hud/types';
 import type { Entity } from '$lib/ecs/types';
 import { DOUBLE_CLICK_TIMEOUT } from '$lib/config/timing';
 import { PAN_SPEED } from '$lib/config/input';
@@ -218,30 +219,21 @@ export function createInputHandlers(
 
 		switch (e.key.toLowerCase()) {
 			case 'd': {
-				// Dig or cancel dig selected tiles
+				// Dig selected tiles (only tiles without existing dig tasks)
 				const state = getState();
-				if (state.selectedTiles.length > 0) {
-					// Check if all selected tiles have dig tasks
-					let allHaveDigTask = true;
-					for (const coord of state.selectedTiles) {
-						let hasTask = false;
-						for (const task of state.tasks.values()) {
-							if (task.targetX === coord.x && task.targetY === coord.y) {
-								hasTask = true;
-								break;
-							}
-						}
-						if (!hasTask) {
-							allHaveDigTask = false;
-							break;
-						}
-					}
+				const actions = computeAvailableActions(state);
+				if (actions.canDig) {
+					emitCommand(dig(actions.digTiles));
+				}
+				break;
+			}
 
-					if (allHaveDigTask) {
-						emitCommand(cancelDig(state.selectedTiles));
-					} else {
-						emitCommand(dig(state.selectedTiles));
-					}
+			case 'x': {
+				// Cancel dig tasks on selected tiles
+				const state = getState();
+				const actions = computeAvailableActions(state);
+				if (actions.canCancelDig) {
+					emitCommand(cancelDig(actions.cancelTiles));
 				}
 				break;
 			}

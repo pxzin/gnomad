@@ -87,6 +87,17 @@ export interface ActionButtonState {
 	action: 'dig' | 'cancel-dig';
 }
 
+export interface AvailableActions {
+	/** Can dig new tiles (tiles without dig tasks) */
+	canDig: boolean;
+	/** Can cancel existing dig tasks */
+	canCancelDig: boolean;
+	/** Tiles that can be dug (no existing task) */
+	digTiles: { x: number; y: number }[];
+	/** Tiles with existing dig tasks that can be cancelled */
+	cancelTiles: { x: number; y: number }[];
+}
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -189,64 +200,77 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 
 /**
  * Compute ActionButtonState from GameState.
+ * @deprecated Use computeAvailableActions instead for multi-button support
  */
 export function computeActionButtonState(state: GameState): ActionButtonState {
-	const { selectedTiles, selectedGnomes, tasks } = state;
+	const actions = computeAvailableActions(state);
 
-	// Mixed selection or gnomes only = disabled
-	if (selectedGnomes.length > 0) {
+	// Prefer dig action, fallback to cancel
+	if (actions.canDig) {
 		return {
 			label: 'Dig (D)',
 			shortcut: 'D',
-			enabled: false,
+			enabled: true,
 			action: 'dig'
 		};
 	}
 
-	// No tiles selected = disabled
-	if (selectedTiles.length === 0) {
+	if (actions.canCancelDig) {
 		return {
-			label: 'Dig (D)',
-			shortcut: 'D',
-			enabled: false,
-			action: 'dig'
-		};
-	}
-
-	// Check if all selected tiles have dig tasks
-	let allHaveDigTask = true;
-
-	for (const coord of selectedTiles) {
-		let hasTask = false;
-		for (const task of tasks.values()) {
-			if (task.targetX === coord.x && task.targetY === coord.y) {
-				hasTask = true;
-				break;
-			}
-		}
-		if (!hasTask) {
-			allHaveDigTask = false;
-			break;
-		}
-	}
-
-	// All have dig task = Cancel Dig
-	if (allHaveDigTask) {
-		return {
-			label: 'Cancel Dig (D)',
-			shortcut: 'D',
+			label: 'Cancel Dig (X)',
+			shortcut: 'X',
 			enabled: true,
 			action: 'cancel-dig'
 		};
 	}
 
-	// Some or none have dig task = Dig
 	return {
 		label: 'Dig (D)',
 		shortcut: 'D',
-		enabled: true,
+		enabled: false,
 		action: 'dig'
 	};
+}
+
+/**
+ * Compute available actions from GameState.
+ * Returns which actions are available and the tiles they apply to.
+ */
+export function computeAvailableActions(state: GameState): AvailableActions {
+	const { selectedTiles, selectedGnomes, tasks } = state;
+
+	const result: AvailableActions = {
+		canDig: false,
+		canCancelDig: false,
+		digTiles: [],
+		cancelTiles: []
+	};
+
+	// No actions if gnomes are selected or no tiles selected
+	if (selectedGnomes.length > 0 || selectedTiles.length === 0) {
+		return result;
+	}
+
+	// Build a set of tiles with existing dig tasks for O(1) lookup
+	const tilesWithTasks = new Set<string>();
+	for (const task of tasks.values()) {
+		tilesWithTasks.add(`${task.targetX},${task.targetY}`);
+	}
+
+	// Categorize each selected tile
+	for (const coord of selectedTiles) {
+		const key = `${coord.x},${coord.y}`;
+		if (tilesWithTasks.has(key)) {
+			result.cancelTiles.push({ x: coord.x, y: coord.y });
+		} else {
+			result.digTiles.push({ x: coord.x, y: coord.y });
+		}
+	}
+
+	result.canDig = result.digTiles.length > 0;
+	result.canCancelDig = result.cancelTiles.length > 0;
+
+	return result;
 }
 
 /**
