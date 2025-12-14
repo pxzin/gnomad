@@ -19,6 +19,7 @@
 	import { resourcePhysicsSystem } from '$lib/systems/resource-physics';
 	import { collectTaskSystem } from '$lib/systems/collect-task';
 	import { depositSystem } from '$lib/systems/deposit';
+	import { idleBehaviorSystem } from '$lib/systems/idle-behavior';
 	import {
 		createRenderer,
 		destroyRenderer,
@@ -86,6 +87,7 @@
 		resourcePhysicsSystem,
 		depositSystem, // Before task assignment - gnomes with items deposit first
 		taskAssignmentSystem,
+		idleBehaviorSystem, // After task assignment - fills idle time
 		miningSystem,
 		collectTaskSystem,
 		resourceCollectionSystem,

@@ -6,7 +6,7 @@
 
 import type { Entity } from '$lib/ecs/types';
 import type { GameState, ResourceInventory } from '$lib/game/state';
-import { GnomeState, type GnomeInventoryItem, GNOME_INVENTORY_CAPACITY } from '$lib/components/gnome';
+import { GnomeState, type GnomeInventoryItem, type IdleBehaviorType, GNOME_INVENTORY_CAPACITY } from '$lib/components/gnome';
 import { TileType, TILE_CONFIG, isIndestructible } from '$lib/components/tile';
 import { isWorldBoundary } from '$lib/world-gen/generator';
 import { ResourceType } from '$lib/components/resource';
@@ -84,6 +84,8 @@ export interface GnomeInfo {
 	inventory: GnomeInventoryItem[];
 	/** Maximum inventory capacity */
 	inventoryCapacity: number;
+	/** Current idle behavior type, or null if not in idle behavior */
+	idleBehavior: IdleBehaviorType | null;
 }
 
 // ============================================================================
@@ -219,7 +221,8 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 					currentTask,
 					position: { x: Math.floor(position.x), y: Math.floor(position.y) },
 					inventory: gnome.inventory,
-					inventoryCapacity: GNOME_INVENTORY_CAPACITY
+					inventoryCapacity: GNOME_INVENTORY_CAPACITY,
+					idleBehavior: gnome.idleBehavior?.type ?? null
 				}
 			};
 		}
@@ -351,6 +354,23 @@ export function getGnomeStateName(state: GnomeState): string {
 			return 'Depositing';
 		default:
 			return 'Unknown';
+	}
+}
+
+/**
+ * Get idle behavior display name.
+ */
+export function getIdleBehaviorName(behavior: IdleBehaviorType | null): string | null {
+	if (!behavior) return null;
+	switch (behavior) {
+		case 'strolling':
+			return 'Strolling';
+		case 'socializing':
+			return 'Socializing';
+		case 'resting':
+			return 'Resting';
+		default:
+			return null;
 	}
 }
 

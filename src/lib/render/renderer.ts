@@ -89,6 +89,7 @@ export interface Renderer {
 	selectionGraphics: Graphics;
 	taskMarkerGraphics: Graphics;
 	buildPreviewGraphics: Graphics;
+	socializationGraphics: Graphics;
 	/** Cached tile state for dirty checking */
 	tileCache: Map<number, TileCache>;
 	/** Cached gnome positions for dirty checking */
@@ -128,9 +129,11 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 	const selectionGraphics = new Graphics();
 	const taskMarkerGraphics = new Graphics();
 	const buildPreviewGraphics = new Graphics();
+	const socializationGraphics = new Graphics();
 	uiContainer.addChild(selectionGraphics);
 	uiContainer.addChild(taskMarkerGraphics);
 	uiContainer.addChild(buildPreviewGraphics);
+	uiContainer.addChild(socializationGraphics);
 
 	return {
 		app,
@@ -144,6 +147,7 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		selectionGraphics,
 		taskMarkerGraphics,
 		buildPreviewGraphics,
+		socializationGraphics,
 		tileCache: new Map(),
 		gnomeCache: new Map(),
 		resourceCache: new Map(),
@@ -219,6 +223,9 @@ export function render(
 
 	// Render gnomes
 	renderGnomes(renderer, state, interpolation);
+
+	// Render socialization indicators above gnomes
+	renderSocializationIndicators(renderer, state);
 
 	// Render selection
 	renderSelection(renderer, state);
@@ -488,6 +495,36 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 			renderer.gnomeGraphics.delete(entity);
 			renderer.gnomeCache.delete(entity);
 		}
+	}
+}
+
+/**
+ * Render socialization indicators ("..." ellipsis) above gnomes that are socializing.
+ */
+function renderSocializationIndicators(renderer: Renderer, state: GameState): void {
+	renderer.socializationGraphics.clear();
+
+	for (const [entity, gnome] of state.gnomes) {
+		// Only render for socializing gnomes
+		if (gnome.idleBehavior?.type !== 'socializing') continue;
+
+		const position = state.positions.get(entity);
+		if (!position) continue;
+
+		// Calculate screen position (above gnome)
+		const screenX = position.x * TILE_SIZE + TILE_SIZE * 0.5;
+		const screenY = position.y * TILE_SIZE - 4; // 4 pixels above gnome
+
+		// Draw "..." ellipsis as 3 small circles
+		const dotRadius = 1.5;
+		const dotSpacing = 4;
+		const dotColor = 0xffffff;
+
+		for (let i = 0; i < 3; i++) {
+			const dotX = screenX + (i - 1) * dotSpacing;
+			renderer.socializationGraphics.circle(dotX, screenY, dotRadius);
+		}
+		renderer.socializationGraphics.fill({ color: dotColor, alpha: 0.9 });
 	}
 }
 

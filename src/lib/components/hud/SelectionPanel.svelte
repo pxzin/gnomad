@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { GameState } from '$lib/game/state';
-	import { computeSelectionInfo, getTileTypeName, getGnomeStateName, getResourceTypeName } from './types';
+	import { computeSelectionInfo, getTileTypeName, getGnomeStateName, getIdleBehaviorName, getResourceTypeName } from './types';
 	import { ResourceType } from '$lib/components/resource';
 	import { TASK_PRIORITY_LABELS, TaskPriority } from '$lib/components/task';
 	import { TASK_PRIORITY_COLORS } from '$lib/config/colors';
@@ -70,7 +70,13 @@
 			<div class="info-header">Gnome #{selectionInfo.gnome.entity}</div>
 			<div class="info-row">
 				<span class="info-label">State:</span>
-				<span class="info-value">{getGnomeStateName(selectionInfo.gnome.state)}</span>
+				<span class="info-value">
+					{#if selectionInfo.gnome.idleBehavior}
+						{getIdleBehaviorName(selectionInfo.gnome.idleBehavior)}
+					{:else}
+						{getGnomeStateName(selectionInfo.gnome.state)}
+					{/if}
+				</span>
 			</div>
 			<div class="info-row">
 				<span class="info-label">Position:</span>

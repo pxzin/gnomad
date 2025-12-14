@@ -9,7 +9,7 @@ import { getEntitiesWithGnome, updatePosition, updateGnome } from '$lib/ecs/worl
 import { GnomeState, GNOME_SPEED } from '$lib/components/gnome';
 import { TaskType } from '$lib/components/task';
 import { isSolid } from '$lib/world-gen/generator';
-import { GRAVITY, TERMINAL_VELOCITY } from '$lib/config/physics';
+import { GRAVITY, TERMINAL_VELOCITY, GNOME_IDLE_SPEED } from '$lib/config/physics';
 
 /**
  * Physics system update.
@@ -102,9 +102,10 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 				state: newState
 			}));
 		} else {
-			// Move toward target
-			const moveX = (dx / dist) * GNOME_SPEED;
-			const moveY = (dy / dist) * GNOME_SPEED;
+			// Move toward target - use slower speed for idle strolling
+			const speed = gnome.idleBehavior?.type === 'strolling' ? GNOME_IDLE_SPEED : GNOME_SPEED;
+			const moveX = (dx / dist) * speed;
+			const moveY = (dy / dist) * speed;
 			newX += moveX;
 			newY += moveY;
 		}

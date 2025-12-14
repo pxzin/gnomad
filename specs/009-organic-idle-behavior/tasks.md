@@ -22,11 +22,11 @@ Single project structure: `src/lib/` at repository root
 
 **Purpose**: Add configuration constants and type definitions needed by all user stories
 
-- [ ] T001 [P] Add GNOME_IDLE_SPEED constant in src/lib/config/physics.ts
-- [ ] T002 [P] Add idle behavior throttle constants in src/lib/config/performance.ts
-- [ ] T003 [P] Create idle behavior configuration file src/lib/config/idle-behavior.ts with weights and durations
-- [ ] T004 [P] Add IdleBehavior interface and types in src/lib/components/gnome.ts
-- [ ] T005 Add idleBehavior optional field to Gnome interface in src/lib/components/gnome.ts
+- [x] T001 [P] Add GNOME_IDLE_SPEED constant in src/lib/config/physics.ts
+- [x] T002 [P] Add idle behavior throttle constants in src/lib/config/performance.ts
+- [x] T003 [P] Create idle behavior configuration file src/lib/config/idle-behavior.ts with weights and durations
+- [x] T004 [P] Add IdleBehavior interface and types in src/lib/components/gnome.ts
+- [x] T005 Add idleBehavior optional field to Gnome interface in src/lib/components/gnome.ts
 
 **Checkpoint**: Types and configuration available for all user stories
 
@@ -36,9 +36,9 @@ Single project structure: `src/lib/` at repository root
 
 **Purpose**: Create idle behavior system shell and game loop integration
 
-- [ ] T006 Create idle behavior system skeleton in src/lib/systems/idle-behavior.ts with findColonyCenter helper
-- [ ] T007 Add seeded PRNG utility function for deterministic behavior selection in src/lib/systems/idle-behavior.ts
-- [ ] T008 Add idleBehaviorSystem to game loop in src/lib/game/loop.ts (after task-assignment)
+- [x] T006 Create idle behavior system skeleton in src/lib/systems/idle-behavior.ts with findColonyCenter helper
+- [x] T007 Add seeded PRNG utility function for deterministic behavior selection in src/lib/systems/idle-behavior.ts
+- [x] T008 Add idleBehaviorSystem to game loop in src/lib/components/Game.svelte (after task-assignment)
 
 **Checkpoint**: System infrastructure ready - user story implementation can begin
 
@@ -56,12 +56,12 @@ Single project structure: `src/lib/` at repository root
 
 ### Implementation
 
-- [ ] T009 [US1+2] Implement selectRandomStrollDestination() with radius limits in src/lib/systems/idle-behavior.ts
-- [ ] T010 [US1+2] Implement assignStrollBehavior() that sets path and idleBehavior in src/lib/systems/idle-behavior.ts
-- [ ] T011 [US1+2] Implement updateStrollBehavior() to handle destination reached in src/lib/systems/idle-behavior.ts
-- [ ] T012 [US1+2] Apply GNOME_IDLE_SPEED for strolling gnomes in src/lib/systems/physics.ts
-- [ ] T013 [US1+2] Clear idleBehavior when task assigned in src/lib/systems/task-assignment.ts
-- [ ] T014 [US1+2] Wire stroll behavior into main idleBehaviorSystem function in src/lib/systems/idle-behavior.ts
+- [x] T009 [US1+2] Implement selectRandomStrollDestination() with radius limits in src/lib/systems/idle-behavior.ts
+- [x] T010 [US1+2] Implement assignStrollBehavior() that sets path and idleBehavior in src/lib/systems/idle-behavior.ts
+- [x] T011 [US1+2] Implement updateStrollBehavior() to handle destination reached in src/lib/systems/idle-behavior.ts
+- [x] T012 [US1+2] Apply GNOME_IDLE_SPEED for strolling gnomes in src/lib/systems/physics.ts
+- [x] T013 [US1+2] Clear idleBehavior when task assigned in src/lib/systems/task-assignment.ts
+- [x] T014 [US1+2] Wire stroll behavior into main idleBehaviorSystem function in src/lib/systems/idle-behavior.ts
 
 **Checkpoint**: MVP complete. Gnomes now stroll when idle and immediately respond to tasks. Manually test:
 - Idle gnome walks slowly around Storage area
@@ -78,12 +78,12 @@ Single project structure: `src/lib/` at repository root
 
 ### Implementation
 
-- [ ] T015 [US3] Implement findNearbyIdleGnome() for partner detection in src/lib/systems/idle-behavior.ts
-- [ ] T016 [US3] Implement assignSocializeBehavior() that pairs two gnomes in src/lib/systems/idle-behavior.ts
-- [ ] T017 [US3] Implement updateSocializeBehavior() to handle duration end in src/lib/systems/idle-behavior.ts
-- [ ] T018 [US3] Add renderSocializationIndicator() for "..." ellipsis in src/lib/render/renderer.ts
-- [ ] T019 [US3] Call indicator render in renderGnomes() when gnome is socializing in src/lib/render/renderer.ts
-- [ ] T020 [US3] Wire socialize behavior into idleBehaviorSystem with weighted selection in src/lib/systems/idle-behavior.ts
+- [x] T015 [US3] Implement findNearbyIdleGnome() for partner detection in src/lib/systems/idle-behavior.ts
+- [x] T016 [US3] Implement assignSocializeBehavior() that pairs two gnomes in src/lib/systems/idle-behavior.ts
+- [x] T017 [US3] Implement updateSocializeBehavior() to handle duration end in src/lib/systems/idle-behavior.ts
+- [x] T018 [US3] Add renderSocializationIndicators() for "..." ellipsis in src/lib/render/renderer.ts
+- [x] T019 [US3] Call indicator render after renderGnomes() when gnome is socializing in src/lib/render/renderer.ts
+- [x] T020 [US3] Wire socialize behavior into idleBehaviorSystem with weighted selection in src/lib/systems/idle-behavior.ts
 
 **Checkpoint**: Socialization complete. Manually test:
 - Two nearby idle gnomes sometimes start chatting
@@ -101,9 +101,9 @@ Single project structure: `src/lib/` at repository root
 
 ### Implementation
 
-- [ ] T021 [US4] Implement assignRestBehavior() with random duration in src/lib/systems/idle-behavior.ts
-- [ ] T022 [US4] Implement updateRestBehavior() to handle duration end in src/lib/systems/idle-behavior.ts
-- [ ] T023 [US4] Wire rest behavior into idleBehaviorSystem with weighted selection in src/lib/systems/idle-behavior.ts
+- [x] T021 [US4] Implement assignRestBehavior() with random duration in src/lib/systems/idle-behavior.ts
+- [x] T022 [US4] Implement updateRestBehavior() to handle duration end in src/lib/systems/idle-behavior.ts
+- [x] T023 [US4] Wire rest behavior into idleBehaviorSystem with weighted selection in src/lib/systems/idle-behavior.ts
 
 **Checkpoint**: All behaviors complete. Manually test:
 - Gnomes show all 3 behaviors (stroll, socialize, rest)
@@ -116,12 +116,12 @@ Single project structure: `src/lib/` at repository root
 
 **Purpose**: Verify all acceptance criteria and edge cases
 
-- [ ] T024 Verify edge case: gnome doesn't stroll into walls or unreachable tiles
-- [ ] T025 Verify edge case: behavior varies (not all gnomes doing same thing)
-- [ ] T026 Verify edge case: fallback when no Storage exists (gnome stays in place)
-- [ ] T027 Verify performance: 60 FPS maintained with 10+ idle gnomes
-- [ ] T028 Run pnpm check to verify TypeScript compliance
-- [ ] T029 Run pnpm build to verify production build works
+- [x] T024 Verify edge case: gnome doesn't stroll into walls or unreachable tiles
+- [x] T025 Verify edge case: behavior varies (not all gnomes doing same thing)
+- [x] T026 Verify edge case: fallback when no Storage exists (gnome stays in place)
+- [x] T027 Verify performance: 60 FPS maintained with 10+ idle gnomes
+- [x] T028 Run pnpm check to verify TypeScript compliance
+- [x] T029 Run pnpm build to verify production build works
 
 ---
 

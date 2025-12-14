@@ -9,6 +9,29 @@ import type { Position } from './position';
 import { ResourceType } from './resource';
 
 /**
+ * Types of idle behaviors a gnome can perform.
+ */
+export type IdleBehaviorType = 'strolling' | 'socializing' | 'resting';
+
+/**
+ * Idle behavior state for a gnome.
+ * Stored as optional field on Gnome component.
+ */
+export interface IdleBehavior {
+	/** Type of idle behavior currently active */
+	type: IdleBehaviorType;
+	/** Tick when this behavior started (for duration tracking) */
+	startedAt: number;
+	/** Tick when this behavior should end */
+	endsAt: number;
+	/** Target position for strolling (tile coordinates) */
+	targetX?: number;
+	targetY?: number;
+	/** Partner gnome entity for socialization */
+	partnerEntity?: Entity;
+}
+
+/**
  * Item in a gnome's personal inventory.
  */
 export interface GnomeInventoryItem {
@@ -47,6 +70,8 @@ export interface Gnome {
 	inventory: GnomeInventoryItem[];
 	/** Target storage entity for depositing (when walking to deposit) */
 	depositTargetStorage?: Entity;
+	/** Current idle behavior, null if working or truly idle */
+	idleBehavior?: IdleBehavior | null;
 }
 
 /**

@@ -84,13 +84,14 @@ export function taskAssignmentSystem(state: GameState): GameState {
 		// Determine gnome state based on task type
 		const gnomeStateForTask = task.type === TaskType.Collect ? GnomeState.Walking : GnomeState.Walking;
 
-		// Assign task to gnome
+		// Assign task to gnome (clear any idle behavior)
 		currentState = updateGnome(currentState, gnomeEntity, (g) => ({
 			...g,
 			state: gnomeStateForTask,
 			currentTaskId: taskEntity,
 			path: path,
-			pathIndex: 0
+			pathIndex: 0,
+			idleBehavior: null
 		}));
 
 		// Mark task as assigned

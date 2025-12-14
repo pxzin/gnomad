@@ -22,3 +22,16 @@ export const PATH_CACHE_TTL_TICKS = 300;
  * At 60 TPS with 3x speed, this limits to ~180 TPS instead of uncapped.
  */
 export const MAX_TICKS_PER_FRAME = 4;
+
+// Idle Behavior
+/** Ticks between idle behavior system runs (same as task assignment) */
+export const IDLE_BEHAVIOR_THROTTLE_TICKS = 10;
+
+/** Maximum radius from colony center for idle strolls (tiles) */
+export const IDLE_STROLL_MAX_RADIUS = 6;
+
+/** Minimum radius from colony center for idle strolls (tiles) */
+export const IDLE_STROLL_MIN_RADIUS = 2;
+
+/** Maximum distance for socialization partner detection (tiles) */
+export const SOCIALIZATION_MAX_DISTANCE = 3;
