@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>Gnomad - Colony Sim</title>
+	<title>Gnomes At Work</title>
 </svelte:head>
 
 <main>

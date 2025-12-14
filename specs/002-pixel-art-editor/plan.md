@@ -142,7 +142,7 @@ src/
 
 ## Asset Presets
 
-Based on gnomad game requirements (from 001-colony-sim-core spec):
+Based on Gnomes At Work game requirements (from 001-colony-sim-core spec):
 
 | Preset | Dimensions | Category | Purpose |
 |--------|------------|----------|---------|

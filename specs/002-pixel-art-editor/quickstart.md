@@ -8,7 +8,7 @@
 - Node.js 20+ (LTS recommended)
 - pnpm 8+ (`npm install -g pnpm`)
 - Modern browser (Chrome, Firefox, Safari, Edge)
-- Existing gnomad project setup (from 001-colony-sim-core)
+- Existing Gnomes At Work project setup (from 001-colony-sim-core)
 
 ## Setup
 

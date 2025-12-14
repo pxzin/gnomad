@@ -3,7 +3,7 @@
 **Feature Branch**: `002-pixel-art-editor`
 **Created**: 2025-12-11
 **Status**: Draft
-**Input**: User description: "Criar uma ferramenta de desenho pixel art em uma rota separada da aplicação (/editor) para criar e editar assets do jogo gnomad."
+**Input**: User description: "Criar uma ferramenta de desenho pixel art em uma rota separada da aplicação (/editor) para criar e editar assets do jogo Gnomes At Work."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -190,7 +190,7 @@ A developer wants to see how their pixel art will look when rendered in the actu
 - **SC-005**: Preview updates reflect canvas changes within 100ms
 - **SC-006**: Fill operation on maximum canvas size (128x128) completes within 1 second
 - **SC-007**: JSON format is readable enough that a simple asset can be created by writing JSON directly (for AI generation)
-- **SC-008**: All preset sizes match the requirements of the gnomad game (16x16 tiles, 16x24 sprites, etc.)
+- **SC-008**: All preset sizes match the requirements of the Gnomes At Work game (16x16 tiles, 16x24 sprites, etc.)
 
 ## Assumptions
 

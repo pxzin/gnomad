@@ -356,14 +356,14 @@ export function deserialize(json: string): GameState {
 /**
  * Save game state to localStorage.
  */
-export function saveToLocalStorage(state: GameState, key: string = 'gnomad_save'): void {
+export function saveToLocalStorage(state: GameState, key: string = 'gnomes_at_work_save'): void {
 	localStorage.setItem(key, serialize(state));
 }
 
 /**
  * Load game state from localStorage.
  */
-export function loadFromLocalStorage(key: string = 'gnomad_save'): GameState | null {
+export function loadFromLocalStorage(key: string = 'gnomes_at_work_save'): GameState | null {
 	const json = localStorage.getItem(key);
 	if (!json) return null;
 	return deserialize(json);

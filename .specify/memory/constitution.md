@@ -18,7 +18,7 @@ Templates requiring updates:
 Follow-up TODOs: None
 -->
 
-# Gnomad Constitution
+# Gnomes At Work Constitution
 
 ## Core Principles
 
@@ -141,7 +141,7 @@ Every PR MUST verify:
 
 ## Governance
 
-This constitution supersedes all other development practices for gnomad. Amendments require:
+This constitution supersedes all other development practices for Gnomes At Work. Amendments require:
 
 1. Written proposal documenting the change and rationale
 2. Impact analysis on existing code

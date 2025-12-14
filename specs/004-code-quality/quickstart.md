@@ -5,7 +5,7 @@
 
 ## Overview
 
-Este guia descreve como aplicar as refatorações de code quality no projeto gnomad.
+Este guia descreve como aplicar as refatorações de code quality no projeto Gnomes At Work.
 
 ## Pre-requisites
 

@@ -15,10 +15,10 @@
 
 ```bash
 # Create new SvelteKit project
-pnpm create svelte@latest gnomad
+pnpm create svelte@latest Gnomes At Work
 # Select: Skeleton project, TypeScript, ESLint, Prettier
 
-cd gnomad
+cd Gnomes At Work
 pnpm install
 ```
 

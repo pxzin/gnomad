@@ -5,7 +5,7 @@
 
 ## Overview
 
-This guide describes how to implement performance optimizations for the gnomad colony sim.
+This guide describes how to implement performance optimizations for the Gnomes At Work colony sim.
 
 ## Pre-requisites
 

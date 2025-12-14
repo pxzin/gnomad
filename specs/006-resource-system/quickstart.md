@@ -5,7 +5,7 @@
 
 ## Overview
 
-This feature adds resource collection to gnomad. When gnomes mine tiles, resources drop on the ground. Gnomes automatically collect resources by walking over them, and the collected counts display in the HUD.
+This feature adds resource collection to Gnomes At Work. When gnomes mine tiles, resources drop on the ground. Gnomes automatically collect resources by walking over them, and the collected counts display in the HUD.
 
 ## Key Files
 

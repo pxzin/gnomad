@@ -159,7 +159,7 @@
 </script>
 
 <svelte:head>
-	<title>{asset ? `${asset.name}${isDirty ? '*' : ''} - ` : ''}Pixel Art Editor - Gnomad</title>
+	<title>{asset ? `${asset.name}${isDirty ? '*' : ''} - ` : ''}Pixel Art Editor - Gnomes At Work</title>
 </svelte:head>
 
 <svelte:window onkeydown={handleKeydown} onbeforeunload={handleBeforeUnload} />

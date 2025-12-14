@@ -1,4 +1,4 @@
-# gnomad Development Guidelines
+# Gnomes At Work - Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2025-12-11
 
