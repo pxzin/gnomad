@@ -40,10 +40,10 @@ npm test && npm run lint
 TypeScript 5.x (strict mode enabled): Follow standard conventions
 
 ## Recent Changes
+- 007-resource-logistics: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, PixiJS v8
 - 006-resource-system: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, PixiJS v8
 - 005-performance-optimization: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, PixiJS v8, Svelte 5.x
 
-- 004-code-quality: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, PixiJS v8
 
 <!-- MANUAL ADDITIONS START -->
 
