@@ -9,6 +9,7 @@ import { Application, Container, Graphics } from 'pixi.js';
 import type { GameState } from '$lib/game/state';
 import { TILE_CONFIG, TileType } from '$lib/components/tile';
 import { GNOME_COLOR } from '$lib/components/gnome';
+import { RESOURCE_CONFIG } from '$lib/components/resource';
 import {
 	SELECTION_COLOR,
 	SELECTION_ALPHA,
@@ -43,6 +44,16 @@ interface GnomeCache {
 }
 
 /**
+ * Cached resource state for dirty checking.
+ */
+interface ResourceCache {
+	graphics: Graphics;
+	x: number;
+	y: number;
+	type: number;
+}
+
+/**
  * Renderer state.
  */
 export interface Renderer {
@@ -52,12 +63,15 @@ export interface Renderer {
 	uiContainer: Container;
 	tileGraphics: Map<number, Graphics>;
 	gnomeGraphics: Map<number, Graphics>;
+	resourceGraphics: Map<number, Graphics>;
 	selectionGraphics: Graphics;
 	taskMarkerGraphics: Graphics;
 	/** Cached tile state for dirty checking */
 	tileCache: Map<number, TileCache>;
 	/** Cached gnome positions for dirty checking */
 	gnomeCache: Map<number, GnomeCache>;
+	/** Cached resource state for dirty checking */
+	resourceCache: Map<number, ResourceCache>;
 }
 
 /**
@@ -98,10 +112,12 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		uiContainer,
 		tileGraphics: new Map(),
 		gnomeGraphics: new Map(),
+		resourceGraphics: new Map(),
 		selectionGraphics,
 		taskMarkerGraphics,
 		tileCache: new Map(),
-		gnomeCache: new Map()
+		gnomeCache: new Map(),
+		resourceCache: new Map()
 	};
 }
 
@@ -119,8 +135,10 @@ export function destroyRenderer(renderer: Renderer): void {
 	renderer.app.destroy(true);
 	renderer.tileGraphics.clear();
 	renderer.gnomeGraphics.clear();
+	renderer.resourceGraphics.clear();
 	renderer.tileCache.clear();
 	renderer.gnomeCache.clear();
+	renderer.resourceCache.clear();
 }
 
 /**
@@ -155,6 +173,9 @@ export function render(renderer: Renderer, state: GameState, interpolation: numb
 
 	// Render tiles
 	renderTiles(renderer, state);
+
+	// Render resources (dropped items on ground)
+	renderResources(renderer, state);
 
 	// Render gnomes
 	renderGnomes(renderer, state, interpolation);
@@ -238,6 +259,65 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 			graphics.destroy();
 			renderer.tileGraphics.delete(entity);
 			renderer.tileCache.delete(entity);
+		}
+	}
+}
+
+/**
+ * Render all resource entities on the ground.
+ * Uses dirty checking to skip redraws for unchanged resources.
+ */
+function renderResources(renderer: Renderer, state: GameState): void {
+	const activeResources = new Set<number>();
+
+	// Resource visual size (smaller than tile, centered)
+	const RESOURCE_SIZE = 6;
+	const RESOURCE_OFFSET = (TILE_SIZE - RESOURCE_SIZE) / 2;
+
+	for (const [entity, resource] of state.resources) {
+		activeResources.add(entity);
+
+		const position = state.positions.get(entity);
+		if (!position) continue;
+
+		// Calculate screen position (centered in tile)
+		const screenX = position.x * TILE_SIZE + RESOURCE_OFFSET;
+		const screenY = position.y * TILE_SIZE + RESOURCE_OFFSET;
+
+		// Check cache for dirty checking
+		const cached = renderer.resourceCache.get(entity);
+		if (cached && cached.x === screenX && cached.y === screenY && cached.type === resource.type) {
+			// Resource unchanged, skip redraw
+			continue;
+		}
+
+		let graphics = renderer.resourceGraphics.get(entity);
+		if (!graphics) {
+			graphics = new Graphics();
+			renderer.entityContainer.addChild(graphics);
+			renderer.resourceGraphics.set(entity, graphics);
+		}
+
+		// Draw resource with appropriate color
+		const config = RESOURCE_CONFIG[resource.type];
+		graphics.clear();
+		graphics.rect(0, 0, RESOURCE_SIZE, RESOURCE_SIZE);
+		graphics.fill(config.color);
+
+		graphics.x = screenX;
+		graphics.y = screenY;
+
+		// Update cache
+		renderer.resourceCache.set(entity, { graphics, x: screenX, y: screenY, type: resource.type });
+	}
+
+	// Remove resources that no longer exist
+	for (const [entity, graphics] of renderer.resourceGraphics) {
+		if (!activeResources.has(entity)) {
+			renderer.entityContainer.removeChild(graphics);
+			graphics.destroy();
+			renderer.resourceGraphics.delete(entity);
+			renderer.resourceCache.delete(entity);
 		}
 	}
 }

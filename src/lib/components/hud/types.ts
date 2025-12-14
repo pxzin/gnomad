@@ -5,10 +5,13 @@
  */
 
 import type { Entity } from '$lib/ecs/types';
-import type { GameState } from '$lib/game/state';
+import type { GameState, ResourceInventory } from '$lib/game/state';
 import { GnomeState } from '$lib/components/gnome';
 import { TileType, TILE_CONFIG, isIndestructible } from '$lib/components/tile';
 import { isWorldBoundary } from '$lib/world-gen/generator';
+
+// Re-export ResourceInventory for convenience
+export type { ResourceInventory };
 
 // ============================================================================
 // TaskProgress

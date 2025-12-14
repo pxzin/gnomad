@@ -6,11 +6,20 @@
 
 import type { GameState } from '$lib/game/state';
 import type { Entity } from '$lib/ecs/types';
-import { getEntitiesWithGnome, updateGnome, updateTask, updateTile } from '$lib/ecs/world';
+import {
+	getEntitiesWithGnome,
+	updateGnome,
+	updateTask,
+	updateTile,
+	createEntity,
+	addPosition,
+	addResource
+} from '$lib/ecs/world';
 import { GnomeState, GNOME_MINE_RATE } from '$lib/components/gnome';
 import { TaskType } from '$lib/components/task';
 import { TileType, createAirTile, isIndestructible } from '$lib/components/tile';
 import { getTileAt, isWorldBoundary } from '$lib/world-gen/generator';
+import { getResourceTypeForTile, createResource } from '$lib/components/resource';
 
 /**
  * Mining system update.
@@ -64,6 +73,9 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 	const newDurability = tile.durability - GNOME_MINE_RATE;
 
 	if (newDurability <= 0) {
+		// Drop resource before destroying tile
+		state = dropResource(state, task.targetX, task.targetY, tile.type);
+
 		// Tile destroyed - convert to air
 		state = updateTile(state, tileEntity, () => createAirTile());
 
@@ -121,4 +133,23 @@ function completeTask(state: GameState, gnomeEntity: Entity, taskEntity: Entity)
 	}));
 
 	return state;
+}
+
+/**
+ * Drop a resource entity at the specified tile position.
+ * Creates a new resource entity based on the tile type.
+ */
+function dropResource(state: GameState, x: number, y: number, tileType: TileType): GameState {
+	const resourceType = getResourceTypeForTile(tileType);
+	if (resourceType === null) {
+		// Tile type doesn't drop a resource (Air, Bedrock)
+		return state;
+	}
+
+	// Create resource entity
+	const [newState, entity] = createEntity(state);
+	let result = addPosition(newState, entity, { x, y });
+	result = addResource(result, entity, createResource(resourceType));
+
+	return result;
 }

@@ -3,6 +3,7 @@
 	import type { Command } from '$lib/game/commands';
 	import { togglePause, setSpeed, GameSpeed, AVAILABLE_SPEEDS, SPEED_LABELS } from '$lib/game/commands';
 	import { computeTaskProgress } from './types';
+	import ResourcePanel from './ResourcePanel.svelte';
 
 	interface Props {
 		state: GameState;
@@ -18,6 +19,7 @@
 	let tick = $derived(state.tick);
 	let isPaused = $derived(state.isPaused);
 	let currentSpeed = $derived(state.speed);
+	let inventory = $derived(state.inventory);
 
 	// Speed control handlers
 	function handlePause() {
@@ -48,6 +50,8 @@
 			<span class="stat-value fps-value" class:fps-good={fps >= 55} class:fps-ok={fps >= 30 && fps < 55} class:fps-bad={fps < 30}>{Math.round(fps)}</span>
 		</div>
 	</div>
+
+	<ResourcePanel {inventory} />
 
 	<div class="right-section">
 		<button

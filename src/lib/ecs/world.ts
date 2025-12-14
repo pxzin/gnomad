@@ -12,6 +12,7 @@ import type { Velocity } from '$lib/components/velocity';
 import type { Tile } from '$lib/components/tile';
 import type { Gnome } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
+import type { Resource } from '$lib/components/resource';
 
 /**
  * Create a new entity and return updated state with the new entity ID.
@@ -34,12 +35,14 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 	const newTiles = new Map(state.tiles);
 	const newGnomes = new Map(state.gnomes);
 	const newTasks = new Map(state.tasks);
+	const newResources = new Map(state.resources);
 
 	newPositions.delete(entity);
 	newVelocities.delete(entity);
 	newTiles.delete(entity);
 	newGnomes.delete(entity);
 	newTasks.delete(entity);
+	newResources.delete(entity);
 
 	return {
 		...state,
@@ -47,7 +50,8 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 		velocities: newVelocities,
 		tiles: newTiles,
 		gnomes: newGnomes,
-		tasks: newTasks
+		tasks: newTasks,
+		resources: newResources
 	};
 }
 
@@ -97,6 +101,24 @@ export function addTask(state: GameState, entity: Entity, task: Task): GameState
 }
 
 /**
+ * Add a resource component to an entity.
+ */
+export function addResource(state: GameState, entity: Entity, resource: Resource): GameState {
+	const newResources = new Map(state.resources);
+	newResources.set(entity, resource);
+	return { ...state, resources: newResources };
+}
+
+/**
+ * Remove a resource component from an entity.
+ */
+export function removeResource(state: GameState, entity: Entity): GameState {
+	const newResources = new Map(state.resources);
+	newResources.delete(entity);
+	return { ...state, resources: newResources };
+}
+
+/**
  * Get a position component from an entity.
  */
 export function getPosition(state: GameState, entity: Entity): Position | undefined {
@@ -129,6 +151,13 @@ export function getGnome(state: GameState, entity: Entity): Gnome | undefined {
  */
 export function getTask(state: GameState, entity: Entity): Task | undefined {
 	return state.tasks.get(entity);
+}
+
+/**
+ * Get a resource component from an entity.
+ */
+export function getResource(state: GameState, entity: Entity): Resource | undefined {
+	return state.resources.get(entity);
 }
 
 /**
@@ -167,6 +196,13 @@ export function hasTask(state: GameState, entity: Entity): boolean {
 }
 
 /**
+ * Check if an entity has a resource component.
+ */
+export function hasResource(state: GameState, entity: Entity): boolean {
+	return state.resources.has(entity);
+}
+
+/**
  * Get all entities with a position component.
  */
 export function getEntitiesWithPosition(state: GameState): Entity[] {
@@ -185,6 +221,13 @@ export function getEntitiesWithGnome(state: GameState): Entity[] {
  */
 export function getEntitiesWithTask(state: GameState): Entity[] {
 	return Array.from(state.tasks.keys());
+}
+
+/**
+ * Get all entities with a resource component.
+ */
+export function getEntitiesWithResource(state: GameState): Entity[] {
+	return Array.from(state.resources.keys());
 }
 
 /**

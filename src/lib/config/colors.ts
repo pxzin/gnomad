@@ -24,3 +24,9 @@ export const SKY_COLOR = 0x87ceeb;
 // Entity Colors (placeholder sprites)
 /** Bright green gnome placeholder color */
 export const GNOME_COLOR = 0x00ff00;
+
+// Resource Entity Colors
+/** Dirt resource entity color (darker brown) */
+export const RESOURCE_DIRT_COLOR = 0x6b3a0b;
+/** Stone resource entity color (darker gray) */
+export const RESOURCE_STONE_COLOR = 0x4a4a4a;

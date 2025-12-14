@@ -19,13 +19,13 @@
 
 **Purpose**: Create base component and extend state for resource entities
 
-- [ ] T001 Create ResourceType enum and Resource interface in src/lib/components/resource.ts
-- [ ] T002 [P] Add RESOURCE_CONFIG with colors for each resource type in src/lib/components/resource.ts
-- [ ] T003 [P] Add getResourceTypeForTile() mapping function in src/lib/components/resource.ts
-- [ ] T004 Add resources Map and inventory to GameState interface in src/lib/game/state.ts
-- [ ] T005 Update createInitialState() with empty resources and inventory in src/lib/game/state.ts
-- [ ] T006 [P] Update serialize() to include resources and inventory in src/lib/game/state.ts
-- [ ] T007 [P] Update deserialize() to restore resources and inventory in src/lib/game/state.ts
+- [x] T001 Create ResourceType enum and Resource interface in src/lib/components/resource.ts
+- [x] T002 [P] Add RESOURCE_CONFIG with colors for each resource type in src/lib/components/resource.ts
+- [x] T003 [P] Add getResourceTypeForTile() mapping function in src/lib/components/resource.ts
+- [x] T004 Add resources Map and inventory to GameState interface in src/lib/game/state.ts
+- [x] T005 Update createInitialState() with empty resources and inventory in src/lib/game/state.ts
+- [x] T006 [P] Update serialize() to include resources and inventory in src/lib/game/state.ts
+- [x] T007 [P] Update deserialize() to restore resources and inventory in src/lib/game/state.ts
 
 **Checkpoint**: Resource data structures defined, state extended, serialization ready
 
@@ -37,10 +37,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 Add addResource() function to add Resource component in src/lib/ecs/world.ts
-- [ ] T009 [P] Add removeResource() function in src/lib/ecs/world.ts
-- [ ] T010 [P] Add getEntitiesWithResource() query function in src/lib/ecs/world.ts
-- [ ] T011 Export resource functions from src/lib/ecs/world.ts
+- [x] T008 Add addResource() function to add Resource component in src/lib/ecs/world.ts
+- [x] T009 [P] Add removeResource() function in src/lib/ecs/world.ts
+- [x] T010 [P] Add getEntitiesWithResource() query function in src/lib/ecs/world.ts
+- [x] T011 Export resource functions from src/lib/ecs/world.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -54,14 +54,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Create dropResource() helper function in src/lib/systems/mining.ts
-- [ ] T013 [US1] Modify mining system to call dropResource() when tile durability reaches 0 in src/lib/systems/mining.ts
-- [ ] T014 [P] [US1] Add RESOURCE_ENTITY_COLOR constant to src/lib/config/colors.ts
-- [ ] T015 [P] [US1] Add resourceGraphics Map and resourceCache to Renderer interface in src/lib/render/renderer.ts
-- [ ] T016 [US1] Initialize resourceGraphics and resourceCache in createRenderer() in src/lib/render/renderer.ts
-- [ ] T017 [US1] Clear resourceGraphics in destroyRenderer() in src/lib/render/renderer.ts
-- [ ] T018 [US1] Implement renderResources() function in src/lib/render/renderer.ts
-- [ ] T019 [US1] Call renderResources() from render() function in src/lib/render/renderer.ts
+- [x] T012 [US1] Create dropResource() helper function in src/lib/systems/mining.ts
+- [x] T013 [US1] Modify mining system to call dropResource() when tile durability reaches 0 in src/lib/systems/mining.ts
+- [x] T014 [P] [US1] Add RESOURCE_ENTITY_COLOR constant to src/lib/config/colors.ts
+- [x] T015 [P] [US1] Add resourceGraphics Map and resourceCache to Renderer interface in src/lib/render/renderer.ts
+- [x] T016 [US1] Initialize resourceGraphics and resourceCache in createRenderer() in src/lib/render/renderer.ts
+- [x] T017 [US1] Clear resourceGraphics in destroyRenderer() in src/lib/render/renderer.ts
+- [x] T018 [US1] Implement renderResources() function in src/lib/render/renderer.ts
+- [x] T019 [US1] Call renderResources() from render() function in src/lib/render/renderer.ts
 
 **Checkpoint**: Mining tiles drops visible resource entities - User Story 1 complete and testable
 
@@ -75,12 +75,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Create resourceCollectionSystem() function in src/lib/systems/resource-collection.ts
-- [ ] T021 [US2] Implement gnome-resource collision detection (same tile) in src/lib/systems/resource-collection.ts
-- [ ] T022 [US2] Implement inventory update logic (increment by resource type) in src/lib/systems/resource-collection.ts
-- [ ] T023 [US2] Implement resource entity destruction on collection in src/lib/systems/resource-collection.ts
-- [ ] T024 [US2] Export resourceCollectionSystem from src/lib/systems/resource-collection.ts
-- [ ] T025 [US2] Import and add resourceCollectionSystem to systems array in src/lib/components/Game.svelte
+- [x] T020 [US2] Create resourceCollectionSystem() function in src/lib/systems/resource-collection.ts
+- [x] T021 [US2] Implement gnome-resource collision detection (same tile) in src/lib/systems/resource-collection.ts
+- [x] T022 [US2] Implement inventory update logic (increment by resource type) in src/lib/systems/resource-collection.ts
+- [x] T023 [US2] Implement resource entity destruction on collection in src/lib/systems/resource-collection.ts
+- [x] T024 [US2] Export resourceCollectionSystem from src/lib/systems/resource-collection.ts
+- [x] T025 [US2] Import and add resourceCollectionSystem to systems array in src/lib/components/Game.svelte
 
 **Checkpoint**: Gnomes collect resources, inventory updates - User Story 2 complete and testable
 
@@ -94,10 +94,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Add ResourceInventory type export to src/lib/components/hud/types.ts
-- [ ] T027 [US3] Create ResourcePanel.svelte component in src/lib/components/hud/ResourcePanel.svelte
-- [ ] T028 [US3] Style ResourcePanel with dirt and stone counts display in src/lib/components/hud/ResourcePanel.svelte
-- [ ] T029 [US3] Import and add ResourcePanel to HUD layout in src/lib/components/hud/HUD.svelte
+- [x] T026 [P] [US3] Add ResourceInventory type export to src/lib/components/hud/types.ts
+- [x] T027 [US3] Create ResourcePanel.svelte component in src/lib/components/hud/ResourcePanel.svelte
+- [x] T028 [US3] Style ResourcePanel with dirt and stone counts display in src/lib/components/hud/ResourcePanel.svelte
+- [x] T029 [US3] Import and add ResourcePanel to HUD layout in src/lib/components/hud/TopBar.svelte
 
 **Checkpoint**: HUD displays resource counts - User Story 3 complete and testable
 
@@ -107,10 +107,10 @@
 
 **Purpose**: Final validation and edge case handling
 
-- [ ] T030 Verify resources persist across save/load using quickstart.md test scenarios
-- [ ] T031 [P] Verify multiple resources on same tile are all collected
-- [ ] T032 [P] Verify resources outside viewport still exist when scrolling
-- [ ] T033 Verify bedrock tiles do not drop resources
+- [x] T030 Verify resources persist across save/load using quickstart.md test scenarios
+- [x] T031 [P] Verify multiple resources on same tile are all collected
+- [x] T032 [P] Verify resources outside viewport still exist when scrolling
+- [x] T033 Verify bedrock tiles do not drop resources
 
 ---
 

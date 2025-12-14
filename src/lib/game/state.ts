@@ -12,8 +12,27 @@ import type { Tile } from '$lib/components/tile';
 import type { Gnome } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
 import type { Camera } from '$lib/components/camera';
+import type { Resource } from '$lib/components/resource';
 import { createCamera, CAMERA_LERP_SPEED, MIN_ZOOM, MAX_ZOOM } from '$lib/components/camera';
 import { GameSpeed } from './commands';
+
+/**
+ * Global resource inventory.
+ * Tracks collected resources across all gnomes.
+ */
+export interface ResourceInventory {
+	/** Count of collected dirt resources */
+	dirt: number;
+	/** Count of collected stone resources */
+	stone: number;
+}
+
+/**
+ * Create an empty resource inventory.
+ */
+export function createEmptyInventory(): ResourceInventory {
+	return { dirt: 0, stone: 0 };
+}
 
 /**
  * Complete game state.
@@ -47,6 +66,12 @@ export interface GameState {
 	tiles: Map<Entity, Tile>;
 	gnomes: Map<Entity, Gnome>;
 	tasks: Map<Entity, Task>;
+	/** Resource entities in the world (dropped, not yet collected) */
+	resources: Map<Entity, Resource>;
+
+	// Inventory
+	/** Global collected resource counts */
+	inventory: ResourceInventory;
 
 	// Camera state
 	camera: Camera;
@@ -81,6 +106,8 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		tiles: new Map(),
 		gnomes: new Map(),
 		tasks: new Map(),
+		resources: new Map(),
+		inventory: createEmptyInventory(),
 		camera: createCamera((width * 16) / 2, (height * 16) / 2),
 		selectedTiles: [],
 		selectedGnomes: []
@@ -184,6 +211,8 @@ export interface SerializedGameState {
 	tiles: [number, Tile][];
 	gnomes: [number, Gnome][];
 	tasks: [number, Task][];
+	resources: [number, Resource][];
+	inventory: ResourceInventory;
 	camera: Camera;
 	selectedTiles: { x: number; y: number }[];
 	selectedGnomes: number[];
@@ -207,6 +236,8 @@ export function serialize(state: GameState): string {
 		tiles: Array.from(state.tiles.entries()),
 		gnomes: Array.from(state.gnomes.entries()),
 		tasks: Array.from(state.tasks.entries()),
+		resources: Array.from(state.resources.entries()),
+		inventory: state.inventory,
 		camera: state.camera,
 		selectedTiles: state.selectedTiles,
 		selectedGnomes: state.selectedGnomes
@@ -233,6 +264,8 @@ export function deserialize(json: string): GameState {
 		tiles: new Map(data.tiles),
 		gnomes: new Map(data.gnomes),
 		tasks: new Map(data.tasks),
+		resources: new Map(data.resources ?? []),
+		inventory: data.inventory ?? { dirt: 0, stone: 0 },
 		camera: data.camera,
 		selectedTiles: data.selectedTiles,
 		selectedGnomes: data.selectedGnomes ?? []
