@@ -2,6 +2,8 @@
 	import type { GameState } from '$lib/game/state';
 	import { computeSelectionInfo, getTileTypeName, getGnomeStateName, getResourceTypeName } from './types';
 	import { ResourceType } from '$lib/components/resource';
+	import { TASK_PRIORITY_LABELS, TaskPriority } from '$lib/components/task';
+	import { TASK_PRIORITY_COLORS } from '$lib/config/colors';
 
 	interface Props {
 		state: GameState;
@@ -18,6 +20,11 @@
 			counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
 		}
 		return counts;
+	}
+
+	// Helper to convert hex color to CSS
+	function hexToCSS(hex: number): string {
+		return '#' + hex.toString(16).padStart(6, '0');
 	}
 </script>
 
@@ -47,6 +54,14 @@
 			{#if selectionInfo.tile.hasDigTask}
 				<div class="info-row task-status">
 					<span class="task-badge">Dig Task</span>
+					{#if selectionInfo.tile.taskPriority !== null}
+						<span
+							class="priority-badge"
+							style="background-color: {hexToCSS(TASK_PRIORITY_COLORS[selectionInfo.tile.taskPriority])}"
+						>
+							{TASK_PRIORITY_LABELS[selectionInfo.tile.taskPriority]}
+						</span>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -175,6 +190,15 @@
 		padding: 2px 6px;
 		border-radius: 3px;
 		font-size: 11px;
+	}
+
+	.priority-badge {
+		color: white;
+		padding: 2px 6px;
+		border-radius: 3px;
+		font-size: 11px;
+		font-weight: bold;
+		text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
 	}
 
 	/* Inventory styles */

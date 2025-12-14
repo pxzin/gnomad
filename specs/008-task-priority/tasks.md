@@ -23,8 +23,8 @@ Single project structure: `src/lib/` at repository root
 
 **Purpose**: Add priority color constants and labels needed by all user stories
 
-- [ ] T001 [P] Add TASK_PRIORITY_COLORS mapping in src/lib/config/colors.ts
-- [ ] T002 [P] Add TASK_PRIORITY_LABELS mapping in src/lib/components/task.ts
+- [x] T001 [P] Add TASK_PRIORITY_COLORS mapping in src/lib/config/colors.ts
+- [x] T002 [P] Add TASK_PRIORITY_LABELS mapping in src/lib/components/task.ts
 
 **Checkpoint**: Color and label constants available for use
 
@@ -42,11 +42,11 @@ Single project structure: `src/lib/` at repository root
 
 ### Implementation
 
-- [ ] T003 [US1+2] Add helper function to group tasks by priority in src/lib/systems/task-assignment.ts
-- [ ] T004 [US1+2] Modify findReachableTask() to iterate priority groups (highest first) in src/lib/systems/task-assignment.ts
-- [ ] T005 [US1+2] Within each priority group, find closest reachable task (by path length) in src/lib/systems/task-assignment.ts
-- [ ] T006 [US1+2] Add FIFO tiebreaker when path lengths are equal in src/lib/systems/task-assignment.ts
-- [ ] T007 [US1+2] Verify MAX_PATHFIND_ATTEMPTS_PER_GNOME is respected across groups in src/lib/systems/task-assignment.ts
+- [x] T003 [US1+2] Add helper function to group tasks by priority in src/lib/systems/task-assignment.ts
+- [x] T004 [US1+2] Modify findReachableTask() to iterate priority groups (highest first) in src/lib/systems/task-assignment.ts
+- [x] T005 [US1+2] Within each priority group, find closest reachable task (by path length) in src/lib/systems/task-assignment.ts
+- [x] T006 [US1+2] Add FIFO tiebreaker when path lengths are equal in src/lib/systems/task-assignment.ts
+- [x] T007 [US1+2] Verify MAX_PATHFIND_ATTEMPTS_PER_GNOME is respected across groups in src/lib/systems/task-assignment.ts
 
 **Checkpoint**: Core algorithm complete. Gnomes now select tasks by priority + distance. Manually test:
 - Same priority: gnome picks closest reachable task
@@ -64,10 +64,10 @@ Single project structure: `src/lib/` at repository root
 
 ### Implementation
 
-- [ ] T008 [US4] Import TASK_PRIORITY_COLORS in src/lib/render/renderer.ts
-- [ ] T009 [US4] Modify renderTaskMarkers() to look up task priority from state in src/lib/render/renderer.ts
-- [ ] T010 [US4] Use priority-based color instead of fixed TASK_MARKER_COLOR in src/lib/render/renderer.ts
-- [ ] T011 [US4] Add priority label display in SelectionPanel when task tile selected in src/lib/components/hud/SelectionPanel.svelte
+- [x] T008 [US4] Import TASK_PRIORITY_COLORS in src/lib/render/renderer.ts
+- [x] T009 [US4] Modify renderTaskMarkers() to look up task priority from state in src/lib/render/renderer.ts
+- [x] T010 [US4] Use priority-based color instead of fixed TASK_MARKER_COLOR in src/lib/render/renderer.ts
+- [x] T011 [US4] Add priority label display in SelectionPanel when task tile selected in src/lib/components/hud/SelectionPanel.svelte
 
 **Checkpoint**: Visual feedback complete. Task markers show priority colors:
 - Urgent = Red (0xff4444)
@@ -81,12 +81,12 @@ Single project structure: `src/lib/` at repository root
 
 **Purpose**: Verify all acceptance criteria and edge cases
 
-- [ ] T012 Verify edge case: unreachable nearby task skipped for reachable distant task
-- [ ] T013 Verify edge case: FIFO tiebreaker when priority and distance equal
-- [ ] T014 Verify edge case: gnome continues to assigned task when priority changes
-- [ ] T015 Verify performance: no FPS regression during task assignment
-- [ ] T016 Run pnpm check to verify TypeScript compliance
-- [ ] T017 Run pnpm build to verify production build works
+- [x] T012 Verify edge case: unreachable nearby task skipped for reachable distant task
+- [x] T013 Verify edge case: FIFO tiebreaker when priority and distance equal
+- [x] T014 Verify edge case: gnome continues to assigned task when priority changes
+- [x] T015 Verify performance: no FPS regression during task assignment
+- [x] T016 Run pnpm check to verify TypeScript compliance
+- [x] T017 Run pnpm build to verify production build works
 
 ---
 

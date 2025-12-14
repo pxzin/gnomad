@@ -10,6 +10,7 @@ import { GnomeState, type GnomeInventoryItem, GNOME_INVENTORY_CAPACITY } from '$
 import { TileType, TILE_CONFIG, isIndestructible } from '$lib/components/tile';
 import { isWorldBoundary } from '$lib/world-gen/generator';
 import { ResourceType } from '$lib/components/resource';
+import { TaskPriority } from '$lib/components/task';
 
 // Re-export ResourceInventory for convenience
 export type { ResourceInventory };
@@ -66,6 +67,8 @@ export interface TileInfo {
 	hasDigTask: boolean;
 	/** Whether this tile cannot be mined */
 	isIndestructible: boolean;
+	/** Task priority level if hasDigTask is true, otherwise null */
+	taskPriority: TaskPriority | null;
 }
 
 export interface GnomeInfo {
@@ -155,11 +158,13 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 		const tile = entityId !== null && entityId !== undefined ? tiles.get(entityId) : null;
 
 		if (tile) {
-			// Check for dig task at this tile
+			// Check for dig task at this tile and get its priority
 			let hasDigTask = false;
+			let taskPriority: TaskPriority | null = null;
 			for (const task of tasks.values()) {
 				if (task.targetX === coord.x && task.targetY === coord.y) {
 					hasDigTask = true;
+					taskPriority = task.priority;
 					break;
 				}
 			}
@@ -180,7 +185,8 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 					durability: tileIsIndestructible ? Infinity : tile.durability,
 					maxDurability: TILE_CONFIG[displayType].durability,
 					hasDigTask,
-					isIndestructible: tileIsIndestructible
+					isIndestructible: tileIsIndestructible,
+					taskPriority
 				}
 			};
 		}

@@ -5,6 +5,8 @@
  * All colors use PixiJS hex format (0xRRGGBB).
  */
 
+import { TaskPriority } from '$lib/components/task';
+
 // Selection & Highlighting
 /** Yellow selection highlight color */
 export const SELECTION_COLOR = 0xffff00;
@@ -34,3 +36,12 @@ export const RESOURCE_STONE_COLOR = 0x4a4a4a;
 // Building Colors
 /** Storage building color (saddle brown) */
 export const STORAGE_COLOR = 0x8b4513;
+
+// Task Priority Colors
+/** Color mapping for task priority levels */
+export const TASK_PRIORITY_COLORS: Record<TaskPriority, number> = {
+	[TaskPriority.Low]: 0x888888, // Gray
+	[TaskPriority.Normal]: 0x4a90d9, // Blue
+	[TaskPriority.High]: 0xffaa00, // Yellow/Orange
+	[TaskPriority.Urgent]: 0xff4444 // Red
+};

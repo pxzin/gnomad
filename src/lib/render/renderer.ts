@@ -14,9 +14,9 @@ import { BUILDING_CONFIG } from '$lib/components/building';
 import {
 	SELECTION_COLOR,
 	SELECTION_ALPHA,
-	TASK_MARKER_COLOR,
 	TASK_MARKER_ALPHA,
-	SKY_COLOR
+	SKY_COLOR,
+	TASK_PRIORITY_COLORS
 } from '$lib/config/colors';
 import { isWorldBoundary } from '$lib/world-gen/generator';
 
@@ -507,29 +507,34 @@ function renderSelection(renderer: Renderer, state: GameState): void {
 
 /**
  * Render task markers (dig designations).
- * Batched: draws all rects first, then strokes once for performance.
+ * Each task marker is colored based on its priority level:
+ * - Urgent: Red (0xff4444)
+ * - High: Yellow/Orange (0xffaa00)
+ * - Normal: Blue (0x4a90d9)
+ * - Low: Gray (0x888888)
  */
 function renderTaskMarkers(renderer: Renderer, state: GameState): void {
 	renderer.taskMarkerGraphics.clear();
 
 	if (state.tasks.size === 0) return;
 
-	// Batch all markers into a single path
+	// Draw each task marker with its priority color
 	for (const [, task] of state.tasks) {
+		const color = TASK_PRIORITY_COLORS[task.priority];
+
 		renderer.taskMarkerGraphics.rect(
 			task.targetX * TILE_SIZE + 2,
 			task.targetY * TILE_SIZE + 2,
 			TILE_SIZE - 4,
 			TILE_SIZE - 4
 		);
-	}
 
-	// Single stroke call for all markers (major performance improvement)
-	renderer.taskMarkerGraphics.stroke({
-		color: TASK_MARKER_COLOR,
-		width: 2,
-		alpha: TASK_MARKER_ALPHA
-	});
+		renderer.taskMarkerGraphics.stroke({
+			color,
+			width: 2,
+			alpha: TASK_MARKER_ALPHA
+		});
+	}
 }
 
 /**

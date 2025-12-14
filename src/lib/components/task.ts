@@ -25,6 +25,16 @@ export enum TaskPriority {
 }
 
 /**
+ * Human-readable labels for task priority levels.
+ */
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+	[TaskPriority.Low]: 'Low',
+	[TaskPriority.Normal]: 'Normal',
+	[TaskPriority.High]: 'High',
+	[TaskPriority.Urgent]: 'Urgent'
+};
+
+/**
  * Task component data.
  */
 export interface Task {

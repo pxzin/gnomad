@@ -2,12 +2,15 @@
  * Task Assignment System
  *
  * Assigns unassigned tasks to idle gnomes.
- * Uses priority + FIFO ordering.
+ * Uses priority + distance + FIFO ordering:
+ * 1. Higher priority tasks are selected first
+ * 2. Within same priority, closest task (by path length) is selected
+ * 3. When priority and distance are equal, older task wins (FIFO)
  */
 
 import type { GameState } from '$lib/game/state';
 import type { Task } from '$lib/components/task';
-import { TaskType } from '$lib/components/task';
+import { TaskType, TaskPriority } from '$lib/components/task';
 import type { Entity } from '$lib/ecs/types';
 import type { Position } from '$lib/components/position';
 import { getEntitiesWithGnome, getEntitiesWithTask, updateGnome, updateTask } from '$lib/ecs/world';
@@ -135,6 +138,32 @@ function getUnassignedTasks(state: GameState): [Entity, Task][] {
 	return unassigned;
 }
 
+/**
+ * Group tasks by priority level.
+ * Returns a map from priority (Urgent=3 down to Low=0) to tasks at that level.
+ * Tasks within each group are already sorted by creation time (FIFO).
+ */
+function groupTasksByPriority(tasks: [Entity, Task][]): Map<TaskPriority, [Entity, Task][]> {
+	const groups = new Map<TaskPriority, [Entity, Task][]>();
+
+	// Initialize all priority levels
+	groups.set(TaskPriority.Urgent, []);
+	groups.set(TaskPriority.High, []);
+	groups.set(TaskPriority.Normal, []);
+	groups.set(TaskPriority.Low, []);
+
+	// Group tasks by priority (input is already sorted by priority desc, createdAt asc)
+	for (const taskTuple of tasks) {
+		const [, task] = taskTuple;
+		const group = groups.get(task.priority);
+		if (group) {
+			group.push(taskTuple);
+		}
+	}
+
+	return groups;
+}
+
 interface ReachableTaskResult {
 	taskIndex: number;
 	taskEntity: Entity;
@@ -142,10 +171,25 @@ interface ReachableTaskResult {
 	path: Position[];
 }
 
+/** Priority levels in descending order (highest first) */
+const PRIORITY_ORDER: TaskPriority[] = [
+	TaskPriority.Urgent,
+	TaskPriority.High,
+	TaskPriority.Normal,
+	TaskPriority.Low
+];
+
 /**
  * Find a reachable task for a gnome.
- * Tries tasks in priority order and returns the first one with a valid path.
- * Limited to MAX_PATHFIND_ATTEMPTS_PER_GNOME attempts to prevent CPU overload.
+ *
+ * Selection algorithm:
+ * 1. Group tasks by priority level
+ * 2. For each priority group (highest first):
+ *    - Find the closest reachable task (by path length)
+ *    - If multiple tasks have the same path length, use FIFO (createdAt)
+ * 3. Return the closest task from the highest priority group that has reachable tasks
+ *
+ * Performance: Limited to MAX_PATHFIND_ATTEMPTS_PER_GNOME total attempts across all groups.
  */
 function findReachableTask(
 	state: GameState,
@@ -154,29 +198,70 @@ function findReachableTask(
 	gnomeY: number,
 	tasks: [Entity, Task][]
 ): ReachableTaskResult | null {
-	let attempts = 0;
+	if (tasks.length === 0) return null;
 
-	// Try each task in priority order until we find one we can reach
-	for (let i = 0; i < tasks.length; i++) {
-		// Stop after max attempts to prevent CPU overload with many unreachable tasks
-		if (attempts >= MAX_PATHFIND_ATTEMPTS_PER_GNOME) {
-			break;
+	// Group tasks by priority
+	const groups = groupTasksByPriority(tasks);
+
+	let totalAttempts = 0;
+
+	// Process priority groups from highest (Urgent=3) to lowest (Low=0)
+	for (const priority of PRIORITY_ORDER) {
+		const tasksInGroup = groups.get(priority);
+		if (!tasksInGroup || tasksInGroup.length === 0) continue;
+
+		// Find the closest reachable task in this priority group
+		let bestTask: ReachableTaskResult | null = null;
+		let bestPathLength = Infinity;
+		let bestCreatedAt = Infinity;
+
+		for (let i = 0; i < tasksInGroup.length; i++) {
+			// Stop after max attempts to prevent CPU overload
+			if (totalAttempts >= MAX_PATHFIND_ATTEMPTS_PER_GNOME) {
+				// If we found any task in this group, return it
+				if (bestTask) return bestTask;
+				// Otherwise, we've exhausted our budget with no result
+				return null;
+			}
+
+			const [taskEntity, task] = tasksInGroup[i]!;
+
+			// Calculate path to task
+			const path = findPath(state, gnomeX, gnomeY, task.targetX, task.targetY);
+			totalAttempts++;
+
+			if (path && path.length > 0) {
+				const pathLength = path.length;
+
+				// Check if this is better than current best:
+				// - Shorter path wins
+				// - Equal path length: earlier createdAt wins (FIFO)
+				const isBetter =
+					pathLength < bestPathLength ||
+					(pathLength === bestPathLength && task.createdAt < bestCreatedAt);
+
+				if (isBetter) {
+					// Find original index in the input tasks array for taskIndex
+					const originalIndex = tasks.findIndex(([e]) => e === taskEntity);
+					bestTask = {
+						taskIndex: originalIndex,
+						taskEntity,
+						task,
+						path
+					};
+					bestPathLength = pathLength;
+					bestCreatedAt = task.createdAt;
+				}
+			}
 		}
 
-		const [taskEntity, task] = tasks[i]!;
-
-		// Calculate path to task
-		const path = findPath(state, gnomeX, gnomeY, task.targetX, task.targetY);
-		attempts++;
-
-		if (path && path.length > 0) {
-			return {
-				taskIndex: i,
-				taskEntity,
-				task,
-				path
-			};
+		// If we found a reachable task in this priority group, return it
+		// (don't check lower priority groups - priority dominates)
+		if (bestTask) {
+			return bestTask;
 		}
+
+		// No reachable tasks in this priority group, continue to next lower priority
 	}
 
 	return null;
