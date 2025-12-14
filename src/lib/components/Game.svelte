@@ -20,6 +20,7 @@
 	import { collectTaskSystem } from '$lib/systems/collect-task';
 	import { depositSystem } from '$lib/systems/deposit';
 	import { idleBehaviorSystem } from '$lib/systems/idle-behavior';
+	import { loadGameAssets } from '$lib/assets/loader';
 	import {
 		createRenderer,
 		destroyRenderer,
@@ -114,6 +115,9 @@
 			if (spawnResult) {
 				state = spawnResult[0];
 			}
+
+			// Load game assets (sprites, textures)
+			await loadGameAssets();
 
 			// Create renderer
 			renderer = await createRenderer(canvas);

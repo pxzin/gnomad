@@ -5,7 +5,8 @@
  * Uses colored squares for MVP visuals.
  */
 
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Container, Graphics, Sprite } from 'pixi.js';
+import { getGnomeIdleTexture } from '$lib/assets/loader';
 import type { GameState } from '$lib/game/state';
 import { TILE_CONFIG, TileType } from '$lib/components/tile';
 import { GNOME_COLOR } from '$lib/components/gnome';
@@ -39,7 +40,7 @@ interface TileCache {
  * Cached gnome state for dirty checking.
  */
 interface GnomeCache {
-	graphics: Graphics;
+	sprite: Sprite;
 	x: number;
 	y: number;
 }
@@ -83,7 +84,7 @@ export interface Renderer {
 	entityContainer: Container;
 	uiContainer: Container;
 	tileGraphics: Map<number, Graphics>;
-	gnomeGraphics: Map<number, Graphics>;
+	gnomeSprites: Map<number, Sprite>;
 	resourceGraphics: Map<number, Graphics>;
 	buildingGraphics: Map<number, Graphics>;
 	selectionGraphics: Graphics;
@@ -141,7 +142,7 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		entityContainer,
 		uiContainer,
 		tileGraphics: new Map(),
-		gnomeGraphics: new Map(),
+		gnomeSprites: new Map(),
 		resourceGraphics: new Map(),
 		buildingGraphics: new Map(),
 		selectionGraphics,
@@ -168,7 +169,7 @@ export function resizeRenderer(renderer: Renderer, width: number, height: number
 export function destroyRenderer(renderer: Renderer): void {
 	renderer.app.destroy(true);
 	renderer.tileGraphics.clear();
-	renderer.gnomeGraphics.clear();
+	renderer.gnomeSprites.clear();
 	renderer.resourceGraphics.clear();
 	renderer.buildingGraphics.clear();
 	renderer.tileCache.clear();
@@ -446,10 +447,11 @@ function renderResources(renderer: Renderer, state: GameState): void {
 
 /**
  * Render all gnomes.
- * Uses dirty checking to skip redraws for gnomes that haven't moved.
+ * Uses sprites when available, falls back to colored squares.
  */
 function renderGnomes(renderer: Renderer, state: GameState, interpolation: number): void {
 	const activeGnomes = new Set<number>();
+	const gnomeTexture = getGnomeIdleTexture();
 
 	for (const [entity, gnome] of state.gnomes) {
 		activeGnomes.add(entity);
@@ -458,41 +460,49 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 		if (!position) continue;
 
 		// Calculate screen position
-		const screenX = position.x * TILE_SIZE + TILE_SIZE * 0.1;
-		const screenY = position.y * TILE_SIZE + TILE_SIZE * 0.1;
+		// Sprite is 16x24, so offset Y to align feet with tile bottom
+		const screenX = position.x * TILE_SIZE;
+		const screenY = position.y * TILE_SIZE - 8; // Offset up by 8px (24-16=8)
 
 		// Check cache for dirty checking
 		const cached = renderer.gnomeCache.get(entity);
 		if (cached && cached.x === screenX && cached.y === screenY) {
-			// Gnome hasn't moved, just update position (no redraw needed)
+			// Gnome hasn't moved, skip update
 			continue;
 		}
 
-		let graphics = renderer.gnomeGraphics.get(entity);
-		if (!graphics) {
-			graphics = new Graphics();
-			renderer.entityContainer.addChild(graphics);
-			renderer.gnomeGraphics.set(entity, graphics);
-
-			// Only draw once when created (gnomes don't change appearance)
-			graphics.rect(0, 0, TILE_SIZE * 0.8, TILE_SIZE * 0.8);
-			graphics.fill(GNOME_COLOR);
+		let sprite = renderer.gnomeSprites.get(entity);
+		if (!sprite) {
+			if (gnomeTexture) {
+				// Use sprite texture
+				sprite = new Sprite(gnomeTexture);
+			} else {
+				// Fallback: create a colored square using Graphics converted to sprite
+				const graphics = new Graphics();
+				graphics.rect(0, 0, TILE_SIZE * 0.8, TILE_SIZE * 0.8);
+				graphics.fill(GNOME_COLOR);
+				const texture = renderer.app.renderer.generateTexture(graphics);
+				sprite = new Sprite(texture);
+				graphics.destroy();
+			}
+			renderer.entityContainer.addChild(sprite);
+			renderer.gnomeSprites.set(entity, sprite);
 		}
 
 		// Update position
-		graphics.x = screenX;
-		graphics.y = screenY;
+		sprite.x = screenX;
+		sprite.y = screenY;
 
 		// Update cache
-		renderer.gnomeCache.set(entity, { graphics, x: screenX, y: screenY });
+		renderer.gnomeCache.set(entity, { sprite, x: screenX, y: screenY });
 	}
 
 	// Remove gnomes that no longer exist
-	for (const [entity, graphics] of renderer.gnomeGraphics) {
+	for (const [entity, sprite] of renderer.gnomeSprites) {
 		if (!activeGnomes.has(entity)) {
-			renderer.entityContainer.removeChild(graphics);
-			graphics.destroy();
-			renderer.gnomeGraphics.delete(entity);
+			renderer.entityContainer.removeChild(sprite);
+			sprite.destroy();
+			renderer.gnomeSprites.delete(entity);
 			renderer.gnomeCache.delete(entity);
 		}
 	}
@@ -511,9 +521,10 @@ function renderSocializationIndicators(renderer: Renderer, state: GameState): vo
 		const position = state.positions.get(entity);
 		if (!position) continue;
 
-		// Calculate screen position (above gnome)
+		// Calculate screen position (above gnome sprite)
+		// Sprite is 16x24 positioned at (x*TILE_SIZE, y*TILE_SIZE - 8)
 		const screenX = position.x * TILE_SIZE + TILE_SIZE * 0.5;
-		const screenY = position.y * TILE_SIZE - 4; // 4 pixels above gnome
+		const screenY = position.y * TILE_SIZE - 14; // Above the 24px tall gnome sprite
 
 		// Draw "..." ellipsis as 3 small circles
 		const dotRadius = 1.5;
