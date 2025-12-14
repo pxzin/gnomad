@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { GameState } from '$lib/game/state';
-	import { computeSelectionInfo, getTileTypeName, getGnomeStateName } from './types';
+	import { computeSelectionInfo, getTileTypeName, getGnomeStateName, getResourceTypeName } from './types';
+	import { ResourceType } from '$lib/components/resource';
 
 	interface Props {
 		state: GameState;
@@ -9,6 +10,15 @@
 	let { state }: Props = $props();
 
 	let selectionInfo = $derived(computeSelectionInfo(state));
+
+	// Helper to aggregate inventory items by type
+	function aggregateInventory(inventory: { type: ResourceType }[]): Map<ResourceType, number> {
+		const counts = new Map<ResourceType, number>();
+		for (const item of inventory) {
+			counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
+		}
+		return counts;
+	}
 </script>
 
 <div class="selection-panel">
@@ -62,6 +72,27 @@
 					<span class="info-value idle">Idle</span>
 				</div>
 			{/if}
+
+			<!-- Inventory Section -->
+			<div class="inventory-section">
+				<div class="inventory-header">
+					<span class="info-label">Inventory:</span>
+					<span class="inventory-count">{selectionInfo.gnome.inventory.length}/{selectionInfo.gnome.inventoryCapacity}</span>
+				</div>
+				{#if selectionInfo.gnome.inventory.length > 0}
+					{@const inventoryCounts = aggregateInventory(selectionInfo.gnome.inventory)}
+					<div class="inventory-items">
+						{#each [...inventoryCounts.entries()] as [type, count]}
+							<div class="inventory-item">
+								<span class="item-type">{getResourceTypeName(type)}</span>
+								<span class="item-count">x{count}</span>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<div class="inventory-empty">Empty</div>
+				{/if}
+			</div>
 		</div>
 	{:else if selectionInfo.type === 'multiple'}
 		<div class="multiple-selection">
@@ -144,5 +175,54 @@
 		padding: 2px 6px;
 		border-radius: 3px;
 		font-size: 11px;
+	}
+
+	/* Inventory styles */
+	.inventory-section {
+		margin-top: 8px;
+		padding-top: 8px;
+		border-top: 1px solid #444;
+	}
+
+	.inventory-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 4px;
+	}
+
+	.inventory-count {
+		font-size: 11px;
+		color: #aaa;
+	}
+
+	.inventory-items {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.inventory-item {
+		display: flex;
+		justify-content: space-between;
+		padding: 2px 4px;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 2px;
+	}
+
+	.item-type {
+		color: #ddd;
+		font-size: 11px;
+	}
+
+	.item-count {
+		color: #90ee90;
+		font-size: 11px;
+	}
+
+	.inventory-empty {
+		color: #666;
+		font-size: 11px;
+		font-style: italic;
 	}
 </style>

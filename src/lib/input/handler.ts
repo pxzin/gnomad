@@ -81,12 +81,18 @@ export interface InputHandlers {
 
 /**
  * Create input handlers for a canvas element.
+ * @param canvas - The canvas element to attach handlers to
+ * @param getRenderer - Function to get the current renderer
+ * @param getState - Function to get the current game state
+ * @param emitCommand - Function to emit commands
+ * @param isInputBlocked - Optional function that returns true when input should be blocked (e.g., build mode)
  */
 export function createInputHandlers(
 	canvas: HTMLCanvasElement,
 	getRenderer: () => Renderer | null,
 	getState: () => GameState,
-	emitCommand: (command: Command) => void
+	emitCommand: (command: Command) => void,
+	isInputBlocked?: () => boolean
 ): InputHandlers {
 	const inputState = createInputState();
 
@@ -96,6 +102,13 @@ export function createInputHandlers(
 		const y = e.clientY - rect.top;
 
 		if (e.button === 0) {
+			// Skip selection when input is blocked (e.g., build mode)
+			if (isInputBlocked?.()) {
+				inputState.lastMouseX = x;
+				inputState.lastMouseY = y;
+				return;
+			}
+
 			// Left click - check for gnome first, then tile selection
 			const renderer = getRenderer();
 			if (renderer) {

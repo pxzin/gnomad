@@ -7,10 +7,11 @@
 
 import type { GameState } from '$lib/game/state';
 import type { Task } from '$lib/components/task';
+import { TaskType } from '$lib/components/task';
 import type { Entity } from '$lib/ecs/types';
 import type { Position } from '$lib/components/position';
 import { getEntitiesWithGnome, getEntitiesWithTask, updateGnome, updateTask } from '$lib/ecs/world';
-import { GnomeState } from '$lib/components/gnome';
+import { GnomeState, hasInventorySpace } from '$lib/components/gnome';
 import { findPath } from './pathfinding';
 import {
 	TASK_ASSIGNMENT_THROTTLE_TICKS,
@@ -42,32 +43,48 @@ export function taskAssignmentSystem(state: GameState): GameState {
 	for (const gnomeEntity of idleGnomes) {
 		if (unassignedTasks.length === 0) break;
 
+		const gnome = currentState.gnomes.get(gnomeEntity);
 		const gnomePos = currentState.positions.get(gnomeEntity);
-		if (!gnomePos) continue;
+		if (!gnome || !gnomePos) continue;
 
 		// Find a reachable task for this gnome
 		const gnomeX = Math.floor(gnomePos.x);
 		const gnomeY = Math.floor(gnomePos.y);
+
+		// Filter tasks based on gnome capabilities
+		const eligibleTasks = unassignedTasks.filter(([_, task]) => {
+			// For Collect tasks, gnome must have inventory space
+			if (task.type === TaskType.Collect) {
+				return hasInventorySpace(gnome);
+			}
+			return true;
+		});
 
 		const result = findReachableTask(
 			currentState,
 			gnomeEntity,
 			gnomeX,
 			gnomeY,
-			unassignedTasks
+			eligibleTasks
 		);
 
 		if (!result) continue;
 
-		const { taskIndex, taskEntity, task, path } = result;
+		const { taskEntity, task, path } = result;
 
-		// Remove from unassigned list
-		unassignedTasks.splice(taskIndex, 1);
+		// Find and remove from original unassigned list
+		const originalIndex = unassignedTasks.findIndex(([e]) => e === taskEntity);
+		if (originalIndex !== -1) {
+			unassignedTasks.splice(originalIndex, 1);
+		}
+
+		// Determine gnome state based on task type
+		const gnomeStateForTask = task.type === TaskType.Collect ? GnomeState.Walking : GnomeState.Walking;
 
 		// Assign task to gnome
 		currentState = updateGnome(currentState, gnomeEntity, (g) => ({
 			...g,
-			state: GnomeState.Walking,
+			state: gnomeStateForTask,
 			currentTaskId: taskEntity,
 			path: path,
 			pathIndex: 0

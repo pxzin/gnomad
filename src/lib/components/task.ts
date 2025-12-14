@@ -10,7 +10,8 @@ import type { Entity } from '$lib/ecs/types';
  * Types of tasks gnomes can perform.
  */
 export enum TaskType {
-	Dig = 'dig'
+	Dig = 'dig',
+	Collect = 'collect'
 }
 
 /**
@@ -41,6 +42,8 @@ export interface Task {
 	assignedGnome: Entity | null;
 	/** Task completion progress (0-100) */
 	progress: number;
+	/** Target entity ID (for Collect tasks: the resource to collect) */
+	targetEntity: Entity | null;
 }
 
 /**
@@ -59,6 +62,28 @@ export function createDigTask(
 		priority,
 		createdAt,
 		assignedGnome: null,
-		progress: 0
+		progress: 0,
+		targetEntity: null
+	};
+}
+
+/**
+ * Create a new collect task for a grounded resource.
+ */
+export function createCollectTask(
+	targetX: number,
+	targetY: number,
+	resourceEntity: Entity,
+	createdAt: number
+): Task {
+	return {
+		type: TaskType.Collect,
+		targetX,
+		targetY,
+		priority: TaskPriority.Normal,
+		createdAt,
+		assignedGnome: null,
+		progress: 0,
+		targetEntity: resourceEntity
 	};
 }

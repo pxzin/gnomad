@@ -6,6 +6,7 @@
  */
 
 import type { Entity } from '$lib/ecs/types';
+import type { BuildingType } from '$lib/components/building';
 
 /**
  * Game speed configuration.
@@ -48,7 +49,8 @@ export type Command =
 	| { type: 'SPAWN_GNOME' }
 	| { type: 'SELECT_GNOMES'; gnomeIds: Entity[]; addToSelection: boolean }
 	| { type: 'CLEAR_SELECTION' }
-	| { type: 'CANCEL_DIG'; tiles: { x: number; y: number }[] };
+	| { type: 'CANCEL_DIG'; tiles: { x: number; y: number }[] }
+	| { type: 'PLACE_BUILDING'; buildingType: BuildingType; x: number; y: number };
 
 /**
  * Command with tick timestamp for deterministic replay.
@@ -144,4 +146,15 @@ export function clearSelection(): Command {
  */
 export function cancelDig(tiles: { x: number; y: number }[]): Command {
 	return { type: 'CANCEL_DIG', tiles };
+}
+
+/**
+ * Create a PLACE_BUILDING command.
+ * Places a building at the specified tile coordinates.
+ * @param buildingType - Type of building to place
+ * @param x - X tile coordinate (left edge of building)
+ * @param y - Y tile coordinate (top edge of building)
+ */
+export function placeBuilding(buildingType: BuildingType, x: number, y: number): Command {
+	return { type: 'PLACE_BUILDING', buildingType, x, y };
 }

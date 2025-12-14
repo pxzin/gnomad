@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { GameState } from '$lib/game/state';
+	import { getStoredResources, type GameState } from '$lib/game/state';
 	import type { Command } from '$lib/game/commands';
 	import { togglePause, setSpeed, GameSpeed, AVAILABLE_SPEEDS, SPEED_LABELS } from '$lib/game/commands';
 	import { computeTaskProgress } from './types';
@@ -19,7 +19,8 @@
 	let tick = $derived(state.tick);
 	let isPaused = $derived(state.isPaused);
 	let currentSpeed = $derived(state.speed);
-	let inventory = $derived(state.inventory);
+	// Use stored resources from Storage buildings instead of old inventory
+	let inventory = $derived(getStoredResources(state));
 
 	// Speed control handlers
 	function handlePause() {

@@ -23,6 +23,8 @@ export enum ResourceType {
 export interface Resource {
 	/** Type of resource (determines inventory slot) */
 	type: ResourceType;
+	/** Whether the resource has landed on solid ground */
+	isGrounded: boolean;
 }
 
 /**
@@ -59,7 +61,11 @@ export function getResourceTypeForTile(tileType: TileType): ResourceType | null 
 
 /**
  * Create a new Resource component.
+ * Resources start as not grounded (will fall).
  */
 export function createResource(type: ResourceType): Resource {
-	return { type };
+	return {
+		type,
+		isGrounded: false
+	};
 }

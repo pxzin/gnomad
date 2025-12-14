@@ -13,6 +13,7 @@ import {
 	updateTile,
 	createEntity,
 	addPosition,
+	addVelocity,
 	addResource
 } from '$lib/ecs/world';
 import { GnomeState, GNOME_MINE_RATE } from '$lib/components/gnome';
@@ -138,6 +139,7 @@ function completeTask(state: GameState, gnomeEntity: Entity, taskEntity: Entity)
 /**
  * Drop a resource entity at the specified tile position.
  * Creates a new resource entity based on the tile type.
+ * Resource starts with isGrounded: false and will fall via resourcePhysicsSystem.
  */
 function dropResource(state: GameState, x: number, y: number, tileType: TileType): GameState {
 	const resourceType = getResourceTypeForTile(tileType);
@@ -146,9 +148,10 @@ function dropResource(state: GameState, x: number, y: number, tileType: TileType
 		return state;
 	}
 
-	// Create resource entity
+	// Create resource entity with position and velocity for physics
 	const [newState, entity] = createEntity(state);
 	let result = addPosition(newState, entity, { x, y });
+	result = addVelocity(result, entity, { dx: 0, dy: 0 });
 	result = addResource(result, entity, createResource(resourceType));
 
 	return result;

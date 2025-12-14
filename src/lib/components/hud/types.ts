@@ -6,9 +6,10 @@
 
 import type { Entity } from '$lib/ecs/types';
 import type { GameState, ResourceInventory } from '$lib/game/state';
-import { GnomeState } from '$lib/components/gnome';
+import { GnomeState, type GnomeInventoryItem, GNOME_INVENTORY_CAPACITY } from '$lib/components/gnome';
 import { TileType, TILE_CONFIG, isIndestructible } from '$lib/components/tile';
 import { isWorldBoundary } from '$lib/world-gen/generator';
+import { ResourceType } from '$lib/components/resource';
 
 // Re-export ResourceInventory for convenience
 export type { ResourceInventory };
@@ -76,6 +77,10 @@ export interface GnomeInfo {
 	currentTask: string | null;
 	/** Current tile position */
 	position: { x: number; y: number };
+	/** Gnome inventory items */
+	inventory: GnomeInventoryItem[];
+	/** Maximum inventory capacity */
+	inventoryCapacity: number;
 }
 
 // ============================================================================
@@ -192,7 +197,11 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 			if (gnome.currentTaskId !== null) {
 				const task = tasks.get(gnome.currentTaskId);
 				if (task) {
-					currentTask = `Dig at (${task.targetX}, ${task.targetY})`;
+					if (task.type === 'collect') {
+						currentTask = `Collect at (${task.targetX}, ${task.targetY})`;
+					} else {
+						currentTask = `Dig at (${task.targetX}, ${task.targetY})`;
+					}
 				}
 			}
 
@@ -202,7 +211,9 @@ export function computeSelectionInfo(state: GameState): SelectionInfo {
 					entity: gnomeId,
 					state: gnome.state,
 					currentTask,
-					position: { x: Math.floor(position.x), y: Math.floor(position.y) }
+					position: { x: Math.floor(position.x), y: Math.floor(position.y) },
+					inventory: gnome.inventory,
+					inventoryCapacity: GNOME_INVENTORY_CAPACITY
 				}
 			};
 		}
@@ -328,6 +339,24 @@ export function getGnomeStateName(state: GnomeState): string {
 			return 'Mining';
 		case GnomeState.Falling:
 			return 'Falling';
+		case GnomeState.Collecting:
+			return 'Collecting';
+		case GnomeState.Depositing:
+			return 'Depositing';
+		default:
+			return 'Unknown';
+	}
+}
+
+/**
+ * Get resource type display name.
+ */
+export function getResourceTypeName(type: ResourceType): string {
+	switch (type) {
+		case ResourceType.Dirt:
+			return 'Dirt';
+		case ResourceType.Stone:
+			return 'Stone';
 		default:
 			return 'Unknown';
 	}

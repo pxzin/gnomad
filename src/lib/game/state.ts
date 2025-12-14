@@ -12,7 +12,9 @@ import type { Tile } from '$lib/components/tile';
 import type { Gnome } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
 import type { Camera } from '$lib/components/camera';
-import type { Resource } from '$lib/components/resource';
+import { ResourceType, type Resource } from '$lib/components/resource';
+import type { Building } from '$lib/components/building';
+import type { Storage } from '$lib/components/storage';
 import { createCamera, CAMERA_LERP_SPEED, MIN_ZOOM, MAX_ZOOM } from '$lib/components/camera';
 import { GameSpeed } from './commands';
 
@@ -32,6 +34,26 @@ export interface ResourceInventory {
  */
 export function createEmptyInventory(): ResourceInventory {
 	return { dirt: 0, stone: 0 };
+}
+
+/**
+ * Get the total stored resources across all Storage buildings.
+ * This is the new source of truth for global resource availability.
+ */
+export function getStoredResources(state: GameState): ResourceInventory {
+	const result: ResourceInventory = { dirt: 0, stone: 0 };
+
+	for (const storage of state.storages.values()) {
+		for (const [resourceType, count] of storage.contents) {
+			if (resourceType === ResourceType.Dirt) {
+				result.dirt += count;
+			} else if (resourceType === ResourceType.Stone) {
+				result.stone += count;
+			}
+		}
+	}
+
+	return result;
 }
 
 /**
@@ -68,6 +90,10 @@ export interface GameState {
 	tasks: Map<Entity, Task>;
 	/** Resource entities in the world (dropped, not yet collected) */
 	resources: Map<Entity, Resource>;
+	/** Building entities */
+	buildings: Map<Entity, Building>;
+	/** Storage building contents */
+	storages: Map<Entity, Storage>;
 
 	// Inventory
 	/** Global collected resource counts */
@@ -107,6 +133,8 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		gnomes: new Map(),
 		tasks: new Map(),
 		resources: new Map(),
+		buildings: new Map(),
+		storages: new Map(),
 		inventory: createEmptyInventory(),
 		camera: createCamera((width * 16) / 2, (height * 16) / 2),
 		selectedTiles: [],
@@ -195,6 +223,13 @@ export function updateCamera(state: GameState): GameState {
 }
 
 /**
+ * Serialized storage (Map converted to array).
+ */
+export interface SerializedStorage {
+	contents: [ResourceType, number][];
+}
+
+/**
  * Serialized game state format for JSON storage.
  */
 export interface SerializedGameState {
@@ -212,6 +247,8 @@ export interface SerializedGameState {
 	gnomes: [number, Gnome][];
 	tasks: [number, Task][];
 	resources: [number, Resource][];
+	buildings: [number, Building][];
+	storages: [number, SerializedStorage][];
 	inventory: ResourceInventory;
 	camera: Camera;
 	selectedTiles: { x: number; y: number }[];
@@ -222,6 +259,11 @@ export interface SerializedGameState {
  * Serialize game state to JSON string.
  */
 export function serialize(state: GameState): string {
+	// Convert Storage Maps to serializable format
+	const serializedStorages: [number, SerializedStorage][] = Array.from(state.storages.entries()).map(
+		([id, storage]) => [id, { contents: Array.from(storage.contents.entries()) }]
+	);
+
 	const serialized: SerializedGameState = {
 		seed: state.seed,
 		tick: state.tick,
@@ -237,6 +279,8 @@ export function serialize(state: GameState): string {
 		gnomes: Array.from(state.gnomes.entries()),
 		tasks: Array.from(state.tasks.entries()),
 		resources: Array.from(state.resources.entries()),
+		buildings: Array.from(state.buildings.entries()),
+		storages: serializedStorages,
 		inventory: state.inventory,
 		camera: state.camera,
 		selectedTiles: state.selectedTiles,
@@ -250,6 +294,41 @@ export function serialize(state: GameState): string {
  */
 export function deserialize(json: string): GameState {
 	const data = JSON.parse(json) as SerializedGameState;
+
+	// Convert serialized storages back to Storage components with Maps
+	const storages = new Map<Entity, Storage>();
+	if (data.storages) {
+		for (const [id, serializedStorage] of data.storages) {
+			storages.set(id, {
+				contents: new Map(serializedStorage.contents)
+			});
+		}
+	}
+
+	// Ensure gnomes have inventory field (backwards compatibility)
+	const gnomes = new Map(data.gnomes);
+	for (const [id, gnome] of gnomes) {
+		if (!gnome.inventory) {
+			gnomes.set(id, { ...gnome, inventory: [] });
+		}
+	}
+
+	// Ensure resources have isGrounded field (backwards compatibility)
+	const resources = new Map(data.resources ?? []);
+	for (const [id, resource] of resources) {
+		if (resource.isGrounded === undefined) {
+			resources.set(id, { ...resource, isGrounded: true });
+		}
+	}
+
+	// Ensure tasks have targetEntity field (backwards compatibility)
+	const tasks = new Map(data.tasks);
+	for (const [id, task] of tasks) {
+		if (task.targetEntity === undefined) {
+			tasks.set(id, { ...task, targetEntity: null });
+		}
+	}
+
 	return {
 		seed: data.seed,
 		tick: data.tick,
@@ -262,9 +341,11 @@ export function deserialize(json: string): GameState {
 		positions: new Map(data.positions),
 		velocities: new Map(data.velocities),
 		tiles: new Map(data.tiles),
-		gnomes: new Map(data.gnomes),
-		tasks: new Map(data.tasks),
-		resources: new Map(data.resources ?? []),
+		gnomes,
+		tasks,
+		resources,
+		buildings: new Map(data.buildings ?? []),
+		storages,
 		inventory: data.inventory ?? { dirt: 0, stone: 0 },
 		camera: data.camera,
 		selectedTiles: data.selectedTiles,

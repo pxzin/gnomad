@@ -19,17 +19,17 @@
 
 **Purpose**: Extend existing components and state for resource logistics
 
-- [ ] T001 Add isGrounded field to Resource interface in src/lib/components/resource.ts
-- [ ] T002 [P] Update createResource() to initialize isGrounded: false in src/lib/components/resource.ts
-- [ ] T003 Add GnomeInventoryItem interface and GNOME_INVENTORY_CAPACITY constant in src/lib/components/gnome.ts
-- [ ] T004 Add inventory field to Gnome interface in src/lib/components/gnome.ts
-- [ ] T005 [P] Update createGnome() to initialize empty inventory array in src/lib/components/gnome.ts
-- [ ] T006 [P] Add hasInventorySpace(), addToGnomeInventory(), clearGnomeInventory() helper functions in src/lib/components/gnome.ts
-- [ ] T007 Add GnomeState.Collecting and GnomeState.Depositing to GnomeState enum in src/lib/components/gnome.ts
-- [ ] T008 Add targetEntity field to Task interface in src/lib/components/task.ts
-- [ ] T009 [P] Add TaskType.Collect to TaskType enum in src/lib/components/task.ts
-- [ ] T010 [P] Add createCollectTask() factory function in src/lib/components/task.ts
-- [ ] T011 [P] Update createDigTask() to include targetEntity: null in src/lib/components/task.ts
+- [x] T001 Add isGrounded field to Resource interface in src/lib/components/resource.ts
+- [x] T002 [P] Update createResource() to initialize isGrounded: false in src/lib/components/resource.ts
+- [x] T003 Add GnomeInventoryItem interface and GNOME_INVENTORY_CAPACITY constant in src/lib/components/gnome.ts
+- [x] T004 Add inventory field to Gnome interface in src/lib/components/gnome.ts
+- [x] T005 [P] Update createGnome() to initialize empty inventory array in src/lib/components/gnome.ts
+- [x] T006 [P] Add hasInventorySpace(), addToGnomeInventory(), clearGnomeInventory() helper functions in src/lib/components/gnome.ts
+- [x] T007 Add GnomeState.Collecting and GnomeState.Depositing to GnomeState enum in src/lib/components/gnome.ts
+- [x] T008 Add targetEntity field to Task interface in src/lib/components/task.ts
+- [x] T009 [P] Add TaskType.Collect to TaskType enum in src/lib/components/task.ts
+- [x] T010 [P] Add createCollectTask() factory function in src/lib/components/task.ts
+- [x] T011 [P] Update createDigTask() to include targetEntity: null in src/lib/components/task.ts
 
 **Checkpoint**: Component interfaces extended, ready for new components
 
@@ -41,18 +41,18 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T012 Create Building component with BuildingType enum, Building interface, BUILDING_CONFIG in src/lib/components/building.ts
-- [ ] T013 [P] Add createBuilding() factory function in src/lib/components/building.ts
-- [ ] T014 Create Storage component with Storage interface, createStorage(), addToStorage() functions in src/lib/components/storage.ts
-- [ ] T015 [P] Add getStorageCount(), getStorageTotal() helper functions in src/lib/components/storage.ts
-- [ ] T016 Add buildings Map<Entity, Building> and storages Map<Entity, Storage> to GameState interface in src/lib/game/state.ts
-- [ ] T017 Update createEmptyState() to initialize empty buildings and storages Maps in src/lib/game/state.ts
-- [ ] T018 [P] Add SerializedStorage interface to handle Map serialization in src/lib/game/state.ts
-- [ ] T019 Update serialize() to include buildings and storages in src/lib/game/state.ts
-- [ ] T020 Update deserialize() to restore buildings and storages (with backwards compatibility) in src/lib/game/state.ts
-- [ ] T021 Add addBuilding(), removeBuilding(), getEntitiesWithBuilding() functions in src/lib/ecs/world.ts
-- [ ] T022 [P] Add addStorage(), removeStorage(), getEntitiesWithStorage() functions in src/lib/ecs/world.ts
-- [ ] T023 [P] Add STORAGE_COLOR constant to src/lib/config/colors.ts
+- [x] T012 Create Building component with BuildingType enum, Building interface, BUILDING_CONFIG in src/lib/components/building.ts
+- [x] T013 [P] Add createBuilding() factory function in src/lib/components/building.ts
+- [x] T014 Create Storage component with Storage interface, createStorage(), addToStorage() functions in src/lib/components/storage.ts
+- [x] T015 [P] Add getStorageCount(), getStorageTotal() helper functions in src/lib/components/storage.ts
+- [x] T016 Add buildings Map<Entity, Building> and storages Map<Entity, Storage> to GameState interface in src/lib/game/state.ts
+- [x] T017 Update createEmptyState() to initialize empty buildings and storages Maps in src/lib/game/state.ts
+- [x] T018 [P] Add SerializedStorage interface to handle Map serialization in src/lib/game/state.ts
+- [x] T019 Update serialize() to include buildings and storages in src/lib/game/state.ts
+- [x] T020 Update deserialize() to restore buildings and storages (with backwards compatibility) in src/lib/game/state.ts
+- [x] T021 Add addBuilding(), removeBuilding(), getEntitiesWithBuilding() functions in src/lib/ecs/world.ts
+- [x] T022 [P] Add addStorage(), removeStorage(), getEntitiesWithStorage() functions in src/lib/ecs/world.ts
+- [x] T023 [P] Add STORAGE_COLOR constant to src/lib/config/colors.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -66,14 +66,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T024 [US1] Create resourcePhysicsSystem() function skeleton in src/lib/systems/resource-physics.ts
-- [ ] T025 [US1] Implement gravity application to non-grounded resources in src/lib/systems/resource-physics.ts
-- [ ] T026 [US1] Implement solid ground detection and landing logic in src/lib/systems/resource-physics.ts
-- [ ] T027 [US1] Implement isGrounded state transition (false → true) when landing in src/lib/systems/resource-physics.ts
-- [ ] T028 [US1] Implement re-fall detection when supporting tile is removed in src/lib/systems/resource-physics.ts
-- [ ] T029 [US1] Export resourcePhysicsSystem from src/lib/systems/resource-physics.ts
-- [ ] T030 [US1] Import and add resourcePhysicsSystem to game loop in src/lib/components/Game.svelte
-- [ ] T031 [US1] Update dropResource() in src/lib/systems/mining.ts to create resource with isGrounded: false
+- [x] T024 [US1] Create resourcePhysicsSystem() function skeleton in src/lib/systems/resource-physics.ts
+- [x] T025 [US1] Implement gravity application to non-grounded resources in src/lib/systems/resource-physics.ts
+- [x] T026 [US1] Implement solid ground detection and landing logic in src/lib/systems/resource-physics.ts
+- [x] T027 [US1] Implement isGrounded state transition (false → true) when landing in src/lib/systems/resource-physics.ts
+- [x] T028 [US1] Implement re-fall detection when supporting tile is removed in src/lib/systems/resource-physics.ts
+- [x] T029 [US1] Export resourcePhysicsSystem from src/lib/systems/resource-physics.ts
+- [x] T030 [US1] Import and add resourcePhysicsSystem to game loop in src/lib/components/Game.svelte
+- [x] T031 [US1] Update dropResource() in src/lib/systems/mining.ts to create resource with isGrounded: false
 
 **Checkpoint**: Resources fall with gravity and land on solid ground - User Story 1 complete and testable
 

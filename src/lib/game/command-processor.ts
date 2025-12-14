@@ -9,10 +9,12 @@ import type { GameState } from './state';
 import { panCamera, zoomCamera } from './state';
 import type { Command, GameSpeed } from './commands';
 import { createDigTask, TaskPriority } from '$lib/components/task';
-import { createEntity, addTask } from '$lib/ecs/world';
+import { createEntity, addTask, addBuilding, addStorage } from '$lib/ecs/world';
 import { getTileAt, isSolid, isWorldBoundary } from '$lib/world-gen/generator';
 import { TileType, isIndestructible } from '$lib/components/tile';
 import { spawnGnome } from './spawn';
+import { BuildingType, BUILDING_CONFIG, createBuilding } from '$lib/components/building';
+import { createStorage } from '$lib/components/storage';
 
 /**
  * Process a single command and return updated state.
@@ -51,6 +53,9 @@ export function processCommand(state: GameState, command: Command): GameState {
 
 		case 'CANCEL_DIG':
 			return processCancelDig(state, command.tiles);
+
+		case 'PLACE_BUILDING':
+			return processPlaceBuilding(state, command.buildingType, command.x, command.y);
 
 		default:
 			return state;
@@ -287,3 +292,107 @@ function processCancelDig(
 
 	return currentState;
 }
+
+/**
+ * Process PLACE_BUILDING command.
+ * Places a building at the specified tile coordinates.
+ */
+function processPlaceBuilding(
+	state: GameState,
+	buildingType: BuildingType,
+	x: number,
+	y: number
+): GameState {
+	// Validate placement
+	if (!canPlaceBuilding(state, buildingType, x, y)) {
+		return state;
+	}
+
+	// Create building entity
+	const [newState, buildingEntity] = createEntity(state);
+	let currentState = newState;
+
+	// Add building component
+	const building = createBuilding(buildingType);
+	currentState = addBuilding(currentState, buildingEntity, building);
+
+	// Add position component for the building
+	const newPositions = new Map(currentState.positions);
+	newPositions.set(buildingEntity, { x, y });
+	currentState = { ...currentState, positions: newPositions };
+
+	// If it's a Storage building, add storage component
+	if (buildingType === BuildingType.Storage) {
+		const storage = createStorage();
+		currentState = addStorage(currentState, buildingEntity, storage);
+	}
+
+	return currentState;
+}
+
+/**
+ * Check if a building can be placed at the given position.
+ * Requires solid ground below the building footprint.
+ */
+function canPlaceBuilding(
+	state: GameState,
+	buildingType: BuildingType,
+	x: number,
+	y: number
+): boolean {
+	const config = BUILDING_CONFIG[buildingType];
+	const { width, height } = config;
+
+	// Check all tiles under the building footprint
+	for (let bx = 0; bx < width; bx++) {
+		for (let by = 0; by < height; by++) {
+			const tileX = x + bx;
+			const tileY = y + by;
+
+			// Building tiles must be on Air
+			const tileEntity = getTileAt(state, tileX, tileY);
+			if (tileEntity !== null) {
+				const tile = state.tiles.get(tileEntity);
+				if (tile && tile.type !== TileType.Air) {
+					return false;
+				}
+			}
+		}
+	}
+
+	// Check for solid ground below the building
+	for (let bx = 0; bx < width; bx++) {
+		const groundX = x + bx;
+		const groundY = y + height; // Row below the building
+
+		if (!isSolid(state, groundX, groundY)) {
+			return false;
+		}
+	}
+
+	// Check no overlap with existing buildings
+	for (const [existingEntity, existingBuilding] of state.buildings) {
+		const existingPos = state.positions.get(existingEntity);
+		if (!existingPos) continue;
+
+		const existingConfig = BUILDING_CONFIG[existingBuilding.type];
+
+		// Check for overlap
+		const noOverlap =
+			x + width <= existingPos.x ||
+			existingPos.x + existingConfig.width <= x ||
+			y + height <= existingPos.y ||
+			existingPos.y + existingConfig.height <= y;
+
+		if (!noOverlap) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * Export for use in UI validation.
+ */
+export { canPlaceBuilding };

@@ -7,6 +7,7 @@
 import type { GameState } from '$lib/game/state';
 import { getEntitiesWithGnome, updatePosition, updateGnome } from '$lib/ecs/world';
 import { GnomeState, GNOME_SPEED } from '$lib/components/gnome';
+import { TaskType } from '$lib/components/task';
 import { isSolid } from '$lib/world-gen/generator';
 import { GRAVITY, TERMINAL_VELOCITY } from '$lib/config/physics';
 
@@ -78,8 +79,20 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 			// Move to next waypoint
 			const newPathIndex = gnome.pathIndex + 1;
 			if (newPathIndex >= gnome.path.length) {
-				// Path complete
-				newState = gnome.currentTaskId ? GnomeState.Mining : GnomeState.Idle;
+				// Path complete - determine state based on context
+				if (gnome.depositTargetStorage) {
+					// Walking to deposit - transition to Depositing
+					newState = GnomeState.Depositing;
+				} else if (gnome.currentTaskId) {
+					const task = state.tasks.get(gnome.currentTaskId);
+					if (task?.type === TaskType.Collect) {
+						newState = GnomeState.Collecting;
+					} else {
+						newState = GnomeState.Mining;
+					}
+				} else {
+					newState = GnomeState.Idle;
+				}
 			}
 
 			// Update gnome path index

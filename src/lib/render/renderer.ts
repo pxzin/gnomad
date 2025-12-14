@@ -10,6 +10,7 @@ import type { GameState } from '$lib/game/state';
 import { TILE_CONFIG, TileType } from '$lib/components/tile';
 import { GNOME_COLOR } from '$lib/components/gnome';
 import { RESOURCE_CONFIG } from '$lib/components/resource';
+import { BUILDING_CONFIG } from '$lib/components/building';
 import {
 	SELECTION_COLOR,
 	SELECTION_ALPHA,
@@ -54,6 +55,26 @@ interface ResourceCache {
 }
 
 /**
+ * Cached building state for dirty checking.
+ */
+interface BuildingCache {
+	graphics: Graphics;
+	x: number;
+	y: number;
+	type: string;
+}
+
+/**
+ * Build preview state for ghost rendering.
+ */
+export interface BuildPreview {
+	buildingType: string;
+	tileX: number;
+	tileY: number;
+	isValid: boolean;
+}
+
+/**
  * Renderer state.
  */
 export interface Renderer {
@@ -64,14 +85,18 @@ export interface Renderer {
 	tileGraphics: Map<number, Graphics>;
 	gnomeGraphics: Map<number, Graphics>;
 	resourceGraphics: Map<number, Graphics>;
+	buildingGraphics: Map<number, Graphics>;
 	selectionGraphics: Graphics;
 	taskMarkerGraphics: Graphics;
+	buildPreviewGraphics: Graphics;
 	/** Cached tile state for dirty checking */
 	tileCache: Map<number, TileCache>;
 	/** Cached gnome positions for dirty checking */
 	gnomeCache: Map<number, GnomeCache>;
 	/** Cached resource state for dirty checking */
 	resourceCache: Map<number, ResourceCache>;
+	/** Cached building state for dirty checking */
+	buildingCache: Map<number, BuildingCache>;
 }
 
 /**
@@ -102,8 +127,10 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 	// Create UI graphics
 	const selectionGraphics = new Graphics();
 	const taskMarkerGraphics = new Graphics();
+	const buildPreviewGraphics = new Graphics();
 	uiContainer.addChild(selectionGraphics);
 	uiContainer.addChild(taskMarkerGraphics);
+	uiContainer.addChild(buildPreviewGraphics);
 
 	return {
 		app,
@@ -113,11 +140,14 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		tileGraphics: new Map(),
 		gnomeGraphics: new Map(),
 		resourceGraphics: new Map(),
+		buildingGraphics: new Map(),
 		selectionGraphics,
 		taskMarkerGraphics,
+		buildPreviewGraphics,
 		tileCache: new Map(),
 		gnomeCache: new Map(),
-		resourceCache: new Map()
+		resourceCache: new Map(),
+		buildingCache: new Map()
 	};
 }
 
@@ -136,15 +166,22 @@ export function destroyRenderer(renderer: Renderer): void {
 	renderer.tileGraphics.clear();
 	renderer.gnomeGraphics.clear();
 	renderer.resourceGraphics.clear();
+	renderer.buildingGraphics.clear();
 	renderer.tileCache.clear();
 	renderer.gnomeCache.clear();
+	renderer.buildingCache.clear();
 	renderer.resourceCache.clear();
 }
 
 /**
  * Render a single frame.
  */
-export function render(renderer: Renderer, state: GameState, interpolation: number): void {
+export function render(
+	renderer: Renderer,
+	state: GameState,
+	interpolation: number,
+	buildPreview?: BuildPreview | null
+): void {
 	const { camera } = state;
 
 	// Interpolate camera position
@@ -174,6 +211,9 @@ export function render(renderer: Renderer, state: GameState, interpolation: numb
 	// Render tiles
 	renderTiles(renderer, state);
 
+	// Render buildings
+	renderBuildings(renderer, state);
+
 	// Render resources (dropped items on ground)
 	renderResources(renderer, state);
 
@@ -185,6 +225,9 @@ export function render(renderer: Renderer, state: GameState, interpolation: numb
 
 	// Render task markers
 	renderTaskMarkers(renderer, state);
+
+	// Render build preview (ghost)
+	renderBuildPreview(renderer, buildPreview);
 }
 
 /**
@@ -259,6 +302,78 @@ function renderTiles(renderer: Renderer, state: GameState): void {
 			graphics.destroy();
 			renderer.tileGraphics.delete(entity);
 			renderer.tileCache.delete(entity);
+		}
+	}
+}
+
+/**
+ * Render all building entities.
+ * Uses dirty checking to skip redraws for unchanged buildings.
+ */
+function renderBuildings(renderer: Renderer, state: GameState): void {
+	const activeBuildings = new Set<number>();
+
+	for (const [entity, building] of state.buildings) {
+		activeBuildings.add(entity);
+
+		const position = state.positions.get(entity);
+		if (!position) continue;
+
+		const config = BUILDING_CONFIG[building.type];
+
+		// Calculate screen position
+		const screenX = position.x * TILE_SIZE;
+		const screenY = position.y * TILE_SIZE;
+		const width = config.width * TILE_SIZE;
+		const height = config.height * TILE_SIZE;
+
+		// Check cache for dirty checking
+		const cached = renderer.buildingCache.get(entity);
+		if (
+			cached &&
+			cached.x === screenX &&
+			cached.y === screenY &&
+			cached.type === building.type
+		) {
+			// Building unchanged, skip redraw
+			continue;
+		}
+
+		let graphics = renderer.buildingGraphics.get(entity);
+		if (!graphics) {
+			graphics = new Graphics();
+			renderer.worldContainer.addChild(graphics);
+			renderer.buildingGraphics.set(entity, graphics);
+		}
+
+		// Draw building as colored rectangle
+		graphics.clear();
+		graphics.rect(0, 0, width, height);
+		graphics.fill(config.color);
+
+		// Draw border
+		graphics.rect(0, 0, width, height);
+		graphics.stroke({ color: 0x000000, width: 1 });
+
+		graphics.x = screenX;
+		graphics.y = screenY;
+
+		// Update cache
+		renderer.buildingCache.set(entity, {
+			graphics,
+			x: screenX,
+			y: screenY,
+			type: building.type
+		});
+	}
+
+	// Remove buildings that no longer exist
+	for (const [entity, graphics] of renderer.buildingGraphics) {
+		if (!activeBuildings.has(entity)) {
+			renderer.worldContainer.removeChild(graphics);
+			graphics.destroy();
+			renderer.buildingGraphics.delete(entity);
+			renderer.buildingCache.delete(entity);
 		}
 	}
 }
@@ -467,4 +582,34 @@ export function getVisibleBounds(
  */
 export function getFPS(renderer: Renderer): number {
 	return renderer.app.ticker.FPS;
+}
+
+/**
+ * Render building placement preview (ghost).
+ */
+function renderBuildPreview(renderer: Renderer, preview?: BuildPreview | null): void {
+	renderer.buildPreviewGraphics.clear();
+
+	if (!preview) return;
+
+	const config = BUILDING_CONFIG[preview.buildingType as keyof typeof BUILDING_CONFIG];
+	if (!config) return;
+
+	const screenX = preview.tileX * TILE_SIZE;
+	const screenY = preview.tileY * TILE_SIZE;
+	const width = config.width * TILE_SIZE;
+	const height = config.height * TILE_SIZE;
+
+	// Choose color based on validity
+	const fillColor = preview.isValid ? 0x00ff00 : 0xff0000;
+	const fillAlpha = 0.4;
+	const strokeColor = preview.isValid ? 0x00aa00 : 0xaa0000;
+
+	// Draw filled rectangle
+	renderer.buildPreviewGraphics.rect(screenX, screenY, width, height);
+	renderer.buildPreviewGraphics.fill({ color: fillColor, alpha: fillAlpha });
+
+	// Draw border
+	renderer.buildPreviewGraphics.rect(screenX, screenY, width, height);
+	renderer.buildPreviewGraphics.stroke({ color: strokeColor, width: 2, alpha: 0.8 });
 }

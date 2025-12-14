@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { generateWorld, type WorldConfig } from '$lib/world-gen/generator';
-	import { spawnGnome } from '$lib/game/spawn';
+	import { spawnGnome, spawnStorage } from '$lib/game/spawn';
 	import {
 		createGameLoop,
 		startLoop,
@@ -10,24 +10,30 @@
 		updateState,
 		GameLoop
 	} from '$lib/game/loop';
-	import { processCommand } from '$lib/game/command-processor';
+	import { processCommand, canPlaceBuilding } from '$lib/game/command-processor';
 	import { physicsSystem } from '$lib/systems/physics';
 	import { taskAssignmentSystem } from '$lib/systems/task-assignment';
 	import { miningSystem } from '$lib/systems/mining';
 	import { boundsSystem } from '$lib/systems/bounds';
 	import { resourceCollectionSystem } from '$lib/systems/resource-collection';
+	import { resourcePhysicsSystem } from '$lib/systems/resource-physics';
+	import { collectTaskSystem } from '$lib/systems/collect-task';
+	import { depositSystem } from '$lib/systems/deposit';
 	import {
 		createRenderer,
 		destroyRenderer,
 		resizeRenderer,
 		render,
 		getFPS,
-		type Renderer
+		screenToTile,
+		type Renderer,
+		type BuildPreview
 	} from '$lib/render/renderer';
 	import { createInputHandlers, type InputHandlers } from '$lib/input/handler';
 	import type { Command } from '$lib/game/commands';
-	import { spawnGnomeCommand } from '$lib/game/commands';
+	import { spawnGnomeCommand, placeBuilding } from '$lib/game/commands';
 	import { saveToLocalStorage, loadFromLocalStorage, type GameState } from '$lib/game/state';
+	import { BuildingType } from '$lib/components/building';
 	import HudOverlay from './hud/HudOverlay.svelte';
 
 	// Props
@@ -44,17 +50,44 @@
 	let gameState: GameState | null = $state(null);
 	let fps: number = $state(0);
 
+	// Build mode
+	let buildMode: BuildingType | null = $state(null);
+
+	// Mouse position for build preview
+	let mouseScreenX: number = $state(0);
+	let mouseScreenY: number = $state(0);
+
+	// Build preview (ghost)
+	let buildPreview: BuildPreview | null = $derived.by(() => {
+		if (!buildMode || !renderer || !gameState) return null;
+
+		const tile = screenToTile(renderer, gameState, mouseScreenX, mouseScreenY);
+		const isValid = canPlaceBuilding(gameState, buildMode, tile.x, tile.y);
+
+		return {
+			buildingType: buildMode,
+			tileX: tile.x,
+			tileY: tile.y,
+			isValid
+		};
+	});
+
 	// State
 	let canvas: HTMLCanvasElement;
 	let renderer: Renderer | null = null;
 	let gameLoop: GameLoop | null = null;
 	let inputHandlers: InputHandlers | null = null;
+	let buildModeKeyHandler: ((e: KeyboardEvent) => void) | null = null;
 
 	// Systems to run each tick
+	// Order matters: deposit runs before task assignment so gnomes with items deposit first
 	const systems = [
 		physicsSystem,
+		resourcePhysicsSystem,
+		depositSystem, // Before task assignment - gnomes with items deposit first
 		taskAssignmentSystem,
 		miningSystem,
+		collectTaskSystem,
 		resourceCollectionSystem,
 		boundsSystem
 	];
@@ -67,6 +100,12 @@
 		(async () => {
 			// Generate world
 			let state = generateWorld(worldConfig);
+
+			// Spawn initial storage (before gnome so it renders behind)
+			const storageResult = spawnStorage(state);
+			if (storageResult) {
+				state = storageResult[0];
+			}
 
 			// Spawn initial gnome
 			const spawnResult = spawnGnome(state);
@@ -102,8 +141,18 @@
 					if (gameLoop) {
 						queueCommand(gameLoop, command);
 					}
-				}
+				},
+				() => buildMode !== null // Block input when in build mode
 			);
+
+			// Handle ESC to cancel build mode (before other key handlers)
+			buildModeKeyHandler = (e: KeyboardEvent) => {
+				if (e.key === 'Escape' && buildMode !== null) {
+					buildMode = null;
+					e.stopPropagation(); // Prevent other handlers from processing
+				}
+			};
+			window.addEventListener('keydown', buildModeKeyHandler, true); // Capture phase
 
 			// Start game loop
 			gameLoop = startLoop(gameLoop, processCommand, systems, (state, interpolation) => {
@@ -112,7 +161,7 @@
 					inputHandlers.update();
 				}
 				if (renderer) {
-					render(renderer, state, interpolation);
+					render(renderer, state, interpolation, buildPreview);
 					// Update FPS from renderer
 					fps = getFPS(renderer);
 				}
@@ -130,6 +179,9 @@
 
 	// Cleanup
 	onDestroy(() => {
+		if (buildModeKeyHandler) {
+			window.removeEventListener('keydown', buildModeKeyHandler, true);
+		}
 		if (inputHandlers) {
 			inputHandlers.cleanup();
 		}
@@ -182,13 +234,57 @@
 			queueCommand(gameLoop, command);
 		}
 	}
+
+	// Handle build mode toggle
+	function handleSetBuildMode(mode: BuildingType | null) {
+		buildMode = mode;
+	}
+
+	// Track mouse position for build preview
+	function handleMouseMove(e: MouseEvent) {
+		const rect = canvas.getBoundingClientRect();
+		mouseScreenX = e.clientX - rect.left;
+		mouseScreenY = e.clientY - rect.top;
+	}
+
+	// Handle canvas click for build mode
+	function handleCanvasClick(e: MouseEvent) {
+		if (!buildMode || !renderer || !gameLoop) return;
+
+		// Only handle left clicks
+		if (e.button !== 0) return;
+
+		// Get click position in tile coordinates
+		const rect = canvas.getBoundingClientRect();
+		const screenX = e.clientX - rect.left;
+		const screenY = e.clientY - rect.top;
+		const tile = screenToTile(renderer, gameLoop.state, screenX, screenY);
+
+		// Check if placement is valid before executing
+		const isValid = canPlaceBuilding(gameLoop.state, buildMode, tile.x, tile.y);
+
+		if (isValid) {
+			// Place building at tile position
+			queueCommand(gameLoop, placeBuilding(buildMode, tile.x, tile.y));
+			// Exit build mode on success
+			buildMode = null;
+		}
+		// On invalid placement, stay in build mode (the red preview provides feedback)
+	}
 </script>
 
 <div class="game-container">
-	<canvas bind:this={canvas}></canvas>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<canvas
+		bind:this={canvas}
+		onclick={handleCanvasClick}
+		onmousemove={handleMouseMove}
+		class:build-mode={buildMode !== null}
+	></canvas>
 
 	{#if gameState}
-		<HudOverlay state={gameState} {fps} onCommand={handleCommand} />
+		<HudOverlay state={gameState} {fps} {buildMode} onCommand={handleCommand} onSetBuildMode={handleSetBuildMode} />
 
 		<div class="save-load">
 			<button onclick={handleSave}>Save</button>
@@ -213,6 +309,10 @@
 		display: block;
 		width: 100%;
 		height: 100%;
+	}
+
+	canvas.build-mode {
+		cursor: crosshair;
 	}
 
 	.save-load {

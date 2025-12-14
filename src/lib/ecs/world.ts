@@ -13,6 +13,8 @@ import type { Tile } from '$lib/components/tile';
 import type { Gnome } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
 import type { Resource } from '$lib/components/resource';
+import type { Building } from '$lib/components/building';
+import type { Storage } from '$lib/components/storage';
 
 /**
  * Create a new entity and return updated state with the new entity ID.
@@ -36,6 +38,8 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 	const newGnomes = new Map(state.gnomes);
 	const newTasks = new Map(state.tasks);
 	const newResources = new Map(state.resources);
+	const newBuildings = new Map(state.buildings);
+	const newStorages = new Map(state.storages);
 
 	newPositions.delete(entity);
 	newVelocities.delete(entity);
@@ -43,6 +47,8 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 	newGnomes.delete(entity);
 	newTasks.delete(entity);
 	newResources.delete(entity);
+	newBuildings.delete(entity);
+	newStorages.delete(entity);
 
 	return {
 		...state,
@@ -51,7 +57,9 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 		tiles: newTiles,
 		gnomes: newGnomes,
 		tasks: newTasks,
-		resources: newResources
+		resources: newResources,
+		buildings: newBuildings,
+		storages: newStorages
 	};
 }
 
@@ -292,4 +300,86 @@ export function updateTile(
 	const newTiles = new Map(state.tiles);
 	newTiles.set(entity, updater(current));
 	return { ...state, tiles: newTiles };
+}
+
+/**
+ * Add a building component to an entity.
+ */
+export function addBuilding(state: GameState, entity: Entity, building: Building): GameState {
+	const newBuildings = new Map(state.buildings);
+	newBuildings.set(entity, building);
+	return { ...state, buildings: newBuildings };
+}
+
+/**
+ * Remove a building component from an entity.
+ */
+export function removeBuilding(state: GameState, entity: Entity): GameState {
+	const newBuildings = new Map(state.buildings);
+	newBuildings.delete(entity);
+	return { ...state, buildings: newBuildings };
+}
+
+/**
+ * Get all entities with a building component.
+ */
+export function getEntitiesWithBuilding(state: GameState): Entity[] {
+	return Array.from(state.buildings.keys());
+}
+
+/**
+ * Add a storage component to an entity.
+ */
+export function addStorage(state: GameState, entity: Entity, storage: Storage): GameState {
+	const newStorages = new Map(state.storages);
+	newStorages.set(entity, storage);
+	return { ...state, storages: newStorages };
+}
+
+/**
+ * Remove a storage component from an entity.
+ */
+export function removeStorage(state: GameState, entity: Entity): GameState {
+	const newStorages = new Map(state.storages);
+	newStorages.delete(entity);
+	return { ...state, storages: newStorages };
+}
+
+/**
+ * Get all entities with a storage component.
+ */
+export function getEntitiesWithStorage(state: GameState): Entity[] {
+	return Array.from(state.storages.keys());
+}
+
+/**
+ * Update a storage component for an entity.
+ */
+export function updateStorage(
+	state: GameState,
+	entity: Entity,
+	updater: (storage: Storage) => Storage
+): GameState {
+	const current = state.storages.get(entity);
+	if (!current) return state;
+
+	const newStorages = new Map(state.storages);
+	newStorages.set(entity, updater(current));
+	return { ...state, storages: newStorages };
+}
+
+/**
+ * Update a resource component for an entity.
+ */
+export function updateResource(
+	state: GameState,
+	entity: Entity,
+	updater: (resource: Resource) => Resource
+): GameState {
+	const current = state.resources.get(entity);
+	if (!current) return state;
+
+	const newResources = new Map(state.resources);
+	newResources.set(entity, updater(current));
+	return { ...state, resources: newResources };
 }
