@@ -17,9 +17,13 @@ import {
 	SELECTION_ALPHA,
 	TASK_MARKER_ALPHA,
 	SKY_COLOR,
-	TASK_PRIORITY_COLORS
+	TASK_PRIORITY_COLORS,
+	PERMANENT_BACKGROUND_SKY_COLOR,
+	PERMANENT_BACKGROUND_CAVE_COLOR,
+	BACKGROUND_TILE_COLORS
 } from '$lib/config/colors';
 import { isWorldBoundary } from '$lib/world-gen/generator';
+import { getBackgroundTileAt } from '$lib/ecs/background';
 
 /**
  * Tile size in pixels.
@@ -66,6 +70,16 @@ interface BuildingCache {
 }
 
 /**
+ * Cached background tile state for dirty checking.
+ */
+interface BackgroundTileCache {
+	graphics: Graphics;
+	type: number;
+	x: number;
+	y: number;
+}
+
+/**
  * Build preview state for ghost rendering.
  */
 export interface BuildPreview {
@@ -80,6 +94,10 @@ export interface BuildPreview {
  */
 export interface Renderer {
 	app: Application;
+	/** Container for permanent background fills (sky/cave) */
+	permanentBackgroundContainer: Container;
+	/** Container for background tiles */
+	backgroundContainer: Container;
 	worldContainer: Container;
 	entityContainer: Container;
 	uiContainer: Container;
@@ -87,10 +105,16 @@ export interface Renderer {
 	gnomeSprites: Map<number, Sprite>;
 	resourceGraphics: Map<number, Graphics>;
 	buildingGraphics: Map<number, Graphics>;
+	/** Graphics cache for background tiles */
+	backgroundTileGraphics: Map<number, Graphics>;
 	selectionGraphics: Graphics;
 	taskMarkerGraphics: Graphics;
 	buildPreviewGraphics: Graphics;
 	socializationGraphics: Graphics;
+	/** Graphics for sky fill */
+	skyFillGraphics: Graphics;
+	/** Graphics for cave fill */
+	caveFillGraphics: Graphics;
 	/** Cached tile state for dirty checking */
 	tileCache: Map<number, TileCache>;
 	/** Cached gnome positions for dirty checking */
@@ -99,6 +123,8 @@ export interface Renderer {
 	resourceCache: Map<number, ResourceCache>;
 	/** Cached building state for dirty checking */
 	buildingCache: Map<number, BuildingCache>;
+	/** Cached background tile state for dirty checking */
+	backgroundTileCache: Map<number, BackgroundTileCache>;
 }
 
 /**
@@ -117,14 +143,24 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		autoDensity: true
 	});
 
-	// Create layer containers
+	// Create layer containers (z-order: permanent background → background → world → entities → UI)
+	const permanentBackgroundContainer = new Container();
+	const backgroundContainer = new Container();
 	const worldContainer = new Container();
 	const entityContainer = new Container();
 	const uiContainer = new Container();
 
+	app.stage.addChild(permanentBackgroundContainer);
+	app.stage.addChild(backgroundContainer);
 	app.stage.addChild(worldContainer);
 	app.stage.addChild(entityContainer);
 	app.stage.addChild(uiContainer);
+
+	// Create permanent background graphics (sky and cave fills)
+	const skyFillGraphics = new Graphics();
+	const caveFillGraphics = new Graphics();
+	permanentBackgroundContainer.addChild(skyFillGraphics);
+	permanentBackgroundContainer.addChild(caveFillGraphics);
 
 	// Create UI graphics
 	const selectionGraphics = new Graphics();
@@ -138,6 +174,8 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 
 	return {
 		app,
+		permanentBackgroundContainer,
+		backgroundContainer,
 		worldContainer,
 		entityContainer,
 		uiContainer,
@@ -145,14 +183,18 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<Rendere
 		gnomeSprites: new Map(),
 		resourceGraphics: new Map(),
 		buildingGraphics: new Map(),
+		backgroundTileGraphics: new Map(),
 		selectionGraphics,
 		taskMarkerGraphics,
 		buildPreviewGraphics,
 		socializationGraphics,
+		skyFillGraphics,
+		caveFillGraphics,
 		tileCache: new Map(),
 		gnomeCache: new Map(),
 		resourceCache: new Map(),
-		buildingCache: new Map()
+		buildingCache: new Map(),
+		backgroundTileCache: new Map()
 	};
 }
 
@@ -172,10 +214,12 @@ export function destroyRenderer(renderer: Renderer): void {
 	renderer.gnomeSprites.clear();
 	renderer.resourceGraphics.clear();
 	renderer.buildingGraphics.clear();
+	renderer.backgroundTileGraphics.clear();
 	renderer.tileCache.clear();
 	renderer.gnomeCache.clear();
 	renderer.buildingCache.clear();
 	renderer.resourceCache.clear();
+	renderer.backgroundTileCache.clear();
 }
 
 /**
@@ -199,12 +243,19 @@ export function render(
 	const offsetX = screenWidth / 2 - camX * camera.zoom;
 	const offsetY = screenHeight / 2 - camY * camera.zoom;
 
-	// Apply camera transform to world container
+	// Apply camera transform to all world-space containers
+	renderer.permanentBackgroundContainer.x = offsetX;
+	renderer.permanentBackgroundContainer.y = offsetY;
+	renderer.permanentBackgroundContainer.scale.set(camera.zoom);
+
+	renderer.backgroundContainer.x = offsetX;
+	renderer.backgroundContainer.y = offsetY;
+	renderer.backgroundContainer.scale.set(camera.zoom);
+
 	renderer.worldContainer.x = offsetX;
 	renderer.worldContainer.y = offsetY;
 	renderer.worldContainer.scale.set(camera.zoom);
 
-	// Apply same transform to entity and UI containers
 	renderer.entityContainer.x = offsetX;
 	renderer.entityContainer.y = offsetY;
 	renderer.entityContainer.scale.set(camera.zoom);
@@ -213,7 +264,13 @@ export function render(
 	renderer.uiContainer.y = offsetY;
 	renderer.uiContainer.scale.set(camera.zoom);
 
-	// Render tiles
+	// Render permanent background (sky above horizon, cave below)
+	renderPermanentBackground(renderer, state);
+
+	// Render background tiles (darker versions behind foreground)
+	renderBackgroundTiles(renderer, state);
+
+	// Render foreground tiles
 	renderTiles(renderer, state);
 
 	// Render buildings
@@ -236,6 +293,100 @@ export function render(
 
 	// Render build preview (ghost)
 	renderBuildPreview(renderer, buildPreview);
+}
+
+/**
+ * Render permanent background fills (sky above horizon, cave below).
+ */
+function renderPermanentBackground(renderer: Renderer, state: GameState): void {
+	const { worldWidth, worldHeight, horizonY } = state;
+
+	// Sky region (y < horizonY)
+	renderer.skyFillGraphics.clear();
+	renderer.skyFillGraphics.rect(0, 0, worldWidth * TILE_SIZE, horizonY * TILE_SIZE);
+	renderer.skyFillGraphics.fill(PERMANENT_BACKGROUND_SKY_COLOR);
+
+	// Cave region (y >= horizonY)
+	renderer.caveFillGraphics.clear();
+	renderer.caveFillGraphics.rect(
+		0,
+		horizonY * TILE_SIZE,
+		worldWidth * TILE_SIZE,
+		(worldHeight - horizonY) * TILE_SIZE
+	);
+	renderer.caveFillGraphics.fill(PERMANENT_BACKGROUND_CAVE_COLOR);
+}
+
+/**
+ * Render background tiles (darker versions behind foreground).
+ * Uses dirty checking and frustum culling.
+ */
+function renderBackgroundTiles(renderer: Renderer, state: GameState): void {
+	const visibleTiles = new Set<number>();
+
+	// Calculate visible tile range based on camera
+	const { camera } = state;
+	const screenWidth = renderer.app.screen.width;
+	const screenHeight = renderer.app.screen.height;
+
+	const worldLeft = camera.x - screenWidth / (2 * camera.zoom);
+	const worldTop = camera.y - screenHeight / (2 * camera.zoom);
+	const worldRight = camera.x + screenWidth / (2 * camera.zoom);
+	const worldBottom = camera.y + screenHeight / (2 * camera.zoom);
+
+	const minTileX = Math.max(0, Math.floor(worldLeft / TILE_SIZE) - 1);
+	const minTileY = Math.max(0, Math.floor(worldTop / TILE_SIZE) - 1);
+	const maxTileX = Math.min(state.worldWidth - 1, Math.ceil(worldRight / TILE_SIZE) + 1);
+	const maxTileY = Math.min(state.worldHeight - 1, Math.ceil(worldBottom / TILE_SIZE) + 1);
+
+	// Render visible background tiles
+	for (let y = minTileY; y <= maxTileY; y++) {
+		for (let x = minTileX; x <= maxTileX; x++) {
+			const entity = getBackgroundTileAt(state, x, y);
+			if (entity === null) continue;
+
+			const tile = state.backgroundTiles.get(entity);
+			if (!tile || tile.type === TileType.Air) continue;
+
+			visibleTiles.add(entity);
+
+			// Check cache for dirty checking
+			const cached = renderer.backgroundTileCache.get(entity);
+			if (cached && cached.type === tile.type && cached.x === x && cached.y === y) {
+				// Tile unchanged, skip redraw
+				continue;
+			}
+
+			let graphics = renderer.backgroundTileGraphics.get(entity);
+			if (!graphics) {
+				graphics = new Graphics();
+				renderer.backgroundContainer.addChild(graphics);
+				renderer.backgroundTileGraphics.set(entity, graphics);
+			}
+
+			// Draw background tile with darker color
+			const color = BACKGROUND_TILE_COLORS[tile.type];
+			graphics.clear();
+			graphics.rect(0, 0, TILE_SIZE, TILE_SIZE);
+			graphics.fill(color);
+
+			graphics.x = x * TILE_SIZE;
+			graphics.y = y * TILE_SIZE;
+
+			// Update cache
+			renderer.backgroundTileCache.set(entity, { graphics, type: tile.type, x, y });
+		}
+	}
+
+	// Remove background tiles that are no longer visible
+	for (const [entity, graphics] of renderer.backgroundTileGraphics) {
+		if (!visibleTiles.has(entity)) {
+			renderer.backgroundContainer.removeChild(graphics);
+			graphics.destroy();
+			renderer.backgroundTileGraphics.delete(entity);
+			renderer.backgroundTileCache.delete(entity);
+		}
+	}
 }
 
 /**

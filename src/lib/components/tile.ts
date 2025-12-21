@@ -73,3 +73,34 @@ export function createAirTile(): Tile {
 		durability: 0
 	};
 }
+
+/**
+ * Background tile component data.
+ * Uses same TileType as foreground, with visual distinction in renderer.
+ */
+export interface BackgroundTile {
+	/** Type of terrain */
+	type: TileType;
+	/** Current durability (0 = mined/destroyed) */
+	durability: number;
+}
+
+/**
+ * Create a background tile with full durability.
+ */
+export function createBackgroundTile(type: TileType): BackgroundTile {
+	return {
+		type,
+		durability: TILE_CONFIG[type].durability
+	};
+}
+
+/**
+ * Create an empty background (shows permanent background).
+ */
+export function createEmptyBackground(): BackgroundTile {
+	return {
+		type: TileType.Air,
+		durability: 0
+	};
+}

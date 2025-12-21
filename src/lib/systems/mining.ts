@@ -21,6 +21,59 @@ import { TaskType } from '$lib/components/task';
 import { TileType, createAirTile, isIndestructible } from '$lib/components/tile';
 import { getTileAt, isWorldBoundary } from '$lib/world-gen/generator';
 import { getResourceTypeForTile, createResource } from '$lib/components/resource';
+import {
+	getBackgroundTileAt,
+	getBackgroundTile,
+	updateBackgroundTile,
+	removeBackgroundTile,
+	setBackgroundTileAt
+} from '$lib/ecs/background';
+
+/**
+ * Mining layer type.
+ */
+export type MiningLayer = 'foreground' | 'background';
+
+/**
+ * Mining target information.
+ */
+export interface MiningTarget {
+	entity: Entity;
+	layer: MiningLayer;
+	x: number;
+	y: number;
+}
+
+/**
+ * Get the mineable target at a position.
+ * Foreground takes priority over background.
+ * Permanent backgrounds (Sky/Cave) are not mineable.
+ */
+export function getMiningTarget(state: GameState, x: number, y: number): MiningTarget | null {
+	// Check foreground first
+	const foregroundEntity = getTileAt(state, x, y);
+	if (foregroundEntity !== null) {
+		const tile = state.tiles.get(foregroundEntity);
+		if (tile && tile.type !== TileType.Air && !isIndestructible(tile.type)) {
+			// World boundaries are not mineable
+			if (!isWorldBoundary(state, x, y)) {
+				return { entity: foregroundEntity, layer: 'foreground', x, y };
+			}
+		}
+	}
+
+	// Check background if no mineable foreground
+	const backgroundEntity = getBackgroundTileAt(state, x, y);
+	if (backgroundEntity !== null) {
+		const tile = getBackgroundTile(state, backgroundEntity);
+		if (tile && tile.type !== TileType.Air && !isIndestructible(tile.type)) {
+			return { entity: backgroundEntity, layer: 'background', x, y };
+		}
+	}
+
+	// Permanent background not mineable
+	return null;
+}
 
 /**
  * Mining system update.
@@ -51,23 +104,33 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 	const task = state.tasks.get(gnome.currentTaskId);
 	if (!task || task.type !== TaskType.Dig) return state;
 
-	// Get target tile
-	const tileEntity = getTileAt(state, task.targetX, task.targetY);
-	if (tileEntity === null) {
-		// Tile doesn't exist, complete task
+	// Get mining target (foreground priority, then background)
+	const target = getMiningTarget(state, task.targetX, task.targetY);
+	if (!target) {
+		// Nothing to mine at this position, complete task
 		return completeTask(state, gnomeEntity, gnome.currentTaskId);
 	}
 
+	if (target.layer === 'foreground') {
+		return mineForegroundTile(state, gnomeEntity, gnome.currentTaskId, task, target.entity);
+	} else {
+		return mineBackgroundTile(state, gnomeEntity, gnome.currentTaskId, task, target.entity);
+	}
+}
+
+/**
+ * Mine a foreground tile.
+ */
+function mineForegroundTile(
+	state: GameState,
+	gnomeEntity: Entity,
+	taskEntity: Entity,
+	task: { targetX: number; targetY: number },
+	tileEntity: Entity
+): GameState {
 	const tile = state.tiles.get(tileEntity);
 	if (!tile || tile.type === TileType.Air) {
-		// Tile is already air, complete task
-		return completeTask(state, gnomeEntity, gnome.currentTaskId);
-	}
-
-	// Check if tile is indestructible (bedrock or world boundary)
-	if (isIndestructible(tile.type) || isWorldBoundary(state, task.targetX, task.targetY)) {
-		// Cannot mine this tile, cancel task and return gnome to idle
-		return completeTask(state, gnomeEntity, gnome.currentTaskId);
+		return completeTask(state, gnomeEntity, taskEntity);
 	}
 
 	// Reduce tile durability
@@ -81,7 +144,7 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 		state = updateTile(state, tileEntity, () => createAirTile());
 
 		// Update task progress to 100%
-		state = updateTask(state, gnome.currentTaskId, (t) => ({
+		state = updateTask(state, taskEntity, (t) => ({
 			...t,
 			progress: 100
 		}));
@@ -95,7 +158,7 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 		}
 
 		// Complete task
-		return completeTask(state, gnomeEntity, gnome.currentTaskId);
+		return completeTask(state, gnomeEntity, taskEntity);
 	} else {
 		// Update tile durability
 		state = updateTile(state, tileEntity, (t) => ({
@@ -104,11 +167,68 @@ function processMining(state: GameState, gnomeEntity: Entity): GameState {
 		}));
 
 		// Update task progress
-		const originalDurability = tile.durability + (100 - tile.durability);
 		const progress = Math.floor((1 - newDurability / tile.durability) * 100);
-		state = updateTask(state, gnome.currentTaskId, (t) => ({
+		state = updateTask(state, taskEntity, (t) => ({
 			...t,
 			progress: Math.min(99, progress) // Cap at 99 until complete
+		}));
+
+		return state;
+	}
+}
+
+/**
+ * Mine a background tile.
+ * Background mining does NOT drop resources.
+ */
+function mineBackgroundTile(
+	state: GameState,
+	gnomeEntity: Entity,
+	taskEntity: Entity,
+	task: { targetX: number; targetY: number },
+	bgTileEntity: Entity
+): GameState {
+	const tile = getBackgroundTile(state, bgTileEntity);
+	if (!tile || tile.type === TileType.Air) {
+		return completeTask(state, gnomeEntity, taskEntity);
+	}
+
+	// Reduce tile durability
+	const newDurability = tile.durability - GNOME_MINE_RATE;
+
+	if (newDurability <= 0) {
+		// Background tile destroyed - remove from grid (NO resource drop)
+		state = removeBackgroundTile(state, bgTileEntity);
+		state = setBackgroundTileAt(state, task.targetX, task.targetY, null);
+
+		// Update task progress to 100%
+		state = updateTask(state, taskEntity, (t) => ({
+			...t,
+			progress: 100
+		}));
+
+		// Remove destroyed tile from selection
+		const updatedSelectedTiles = state.selectedTiles.filter(
+			(t) => t.x !== task.targetX || t.y !== task.targetY
+		);
+		if (updatedSelectedTiles.length !== state.selectedTiles.length) {
+			state = { ...state, selectedTiles: updatedSelectedTiles };
+		}
+
+		// Complete task
+		return completeTask(state, gnomeEntity, taskEntity);
+	} else {
+		// Update background tile durability
+		state = updateBackgroundTile(state, bgTileEntity, (t) => ({
+			...t,
+			durability: newDurability
+		}));
+
+		// Update task progress
+		const progress = Math.floor((1 - newDurability / tile.durability) * 100);
+		state = updateTask(state, taskEntity, (t) => ({
+			...t,
+			progress: Math.min(99, progress)
 		}));
 
 		return state;

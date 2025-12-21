@@ -20,8 +20,8 @@ import {
 	clearSelection,
 	AVAILABLE_SPEEDS
 } from '$lib/game/commands';
-import { TileType } from '$lib/components/tile';
 import { computeAvailableActions } from '$lib/components/hud/types';
+import { getMiningTarget } from '$lib/systems/mining';
 import type { Entity } from '$lib/ecs/types';
 import { DOUBLE_CLICK_TIMEOUT } from '$lib/config/timing';
 import { PAN_SPEED } from '$lib/config/input';
@@ -153,19 +153,17 @@ export function createInputHandlers(
 					inputState.isAddingToSelection = addToSelection;
 					inputState.selectionStart = tile;
 
-					// Check if tile is solid (not air)
-					const entityId = state.tileGrid[tile.y]?.[tile.x];
-					const tileData = entityId ? state.tiles.get(entityId) : null;
-					const isSolidTile = tileData && tileData.type !== TileType.Air;
+					// Check if there's anything mineable at this position (foreground OR background)
+					const miningTarget = getMiningTarget(state, tile.x, tile.y);
 
-					if (isSolidTile) {
-						// Clicked on solid tile - select it
+					if (miningTarget !== null) {
+						// Clicked on mineable tile (foreground or background) - select it
 						emitCommand(selectTiles([tile], addToSelection));
 					} else if (!addToSelection) {
-						// Clicked on air without Shift - clear all selection but allow drag to start
+						// Clicked on empty tile without Shift - clear all selection but allow drag to start
 						emitCommand(clearSelection());
 					}
-					// If Shift+click on air, do nothing (keep existing selection, allow drag)
+					// If Shift+click on empty tile, do nothing (keep existing selection, allow drag)
 				}
 			}
 		} else if (e.button === 1) {
@@ -354,7 +352,7 @@ export function createInputHandlers(
 
 /**
  * Get all tiles in a rectangular selection.
- * Excludes air tiles.
+ * Includes any position with a mineable target (foreground or background).
  */
 function getTilesInRect(
 	state: GameState,
@@ -369,13 +367,10 @@ function getTilesInRect(
 	const tiles: { x: number; y: number }[] = [];
 	for (let y = minY; y <= maxY; y++) {
 		for (let x = minX; x <= maxX; x++) {
-			// Check if tile is not air
-			const entityId = state.tileGrid[y]?.[x];
-			if (entityId !== null && entityId !== undefined) {
-				const tile = state.tiles.get(entityId);
-				if (tile && tile.type !== TileType.Air) {
-					tiles.push({ x, y });
-				}
+			// Check if there's anything mineable at this position (foreground OR background)
+			const miningTarget = getMiningTarget(state, x, y);
+			if (miningTarget !== null) {
+				tiles.push({ x, y });
 			}
 		}
 	}

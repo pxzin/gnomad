@@ -10,8 +10,9 @@ import { panCamera, zoomCamera } from './state';
 import type { Command, GameSpeed } from './commands';
 import { createDigTask, TaskPriority } from '$lib/components/task';
 import { createEntity, addTask, addBuilding, addStorage } from '$lib/ecs/world';
-import { getTileAt, isSolid, isWorldBoundary } from '$lib/world-gen/generator';
-import { TileType, isIndestructible } from '$lib/components/tile';
+import { getTileAt, isSolid } from '$lib/world-gen/generator';
+import { TileType } from '$lib/components/tile';
+import { getMiningTarget } from '$lib/systems/mining';
 import { spawnGnome } from './spawn';
 import { BuildingType, BUILDING_CONFIG, createBuilding } from '$lib/components/building';
 import { createStorage } from '$lib/components/storage';
@@ -104,7 +105,7 @@ function processSelectTiles(
 
 /**
  * Process DIG command.
- * Creates dig tasks for valid tiles.
+ * Creates dig tasks for valid tiles (foreground or background).
  */
 function processDig(
 	state: GameState,
@@ -113,15 +114,9 @@ function processDig(
 	let currentState = state;
 
 	for (const { x, y } of tiles) {
-		// Check if tile is valid and diggable
-		const tileEntity = getTileAt(currentState, x, y);
-		if (tileEntity === null) continue;
-
-		const tile = currentState.tiles.get(tileEntity);
-		if (!tile || tile.type === TileType.Air) continue;
-
-		// Check if tile is indestructible (bedrock or world boundary)
-		if (isIndestructible(tile.type) || isWorldBoundary(currentState, x, y)) continue;
+		// Check if there's anything mineable at this position (foreground or background)
+		const miningTarget = getMiningTarget(currentState, x, y);
+		if (miningTarget === null) continue;
 
 		// Check if task already exists for this tile
 		const existingTask = findTaskAtPosition(currentState, x, y);

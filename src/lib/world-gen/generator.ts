@@ -9,8 +9,10 @@ import type { GameState } from '$lib/game/state';
 import { createEmptyState } from '$lib/game/state';
 import { createRNG, noise1D } from './noise';
 import { createEntity, addPosition, addTile } from '$lib/ecs/world';
-import { TileType, createTile, createAirTile } from '$lib/components/tile';
+import { TileType, createTile, createAirTile, createBackgroundTile } from '$lib/components/tile';
 import { createPosition } from '$lib/components/position';
+import { addBackgroundTile, setBackgroundTileAt } from '$lib/ecs/background';
+import { PermanentBackgroundType } from '$lib/components/background';
 
 /**
  * World generation configuration.
@@ -26,6 +28,8 @@ export interface WorldConfig {
 	surfaceLevel: number;
 	/** Dirt layer thickness in tiles */
 	dirtDepth: number;
+	/** Horizon Y position override (default: surfaceLevel * height) */
+	horizonY?: number;
 }
 
 /**
@@ -58,6 +62,12 @@ export function generateWorld(config: Partial<WorldConfig> = {}): GameState {
 	// Calculate base surface Y (in tile coordinates, 0 = top)
 	const baseSurfaceY = Math.floor(height * surfaceLevel);
 
+	// Set horizon Y (use config override or default to surface level)
+	state = {
+		...state,
+		horizonY: fullConfig.horizonY ?? baseSurfaceY
+	};
+
 	// Generate terrain column by column
 	for (let x = 0; x < width; x++) {
 		// Add some noise to surface height for variation
@@ -79,7 +89,7 @@ export function generateWorld(config: Partial<WorldConfig> = {}): GameState {
 				tileType = TileType.Stone;
 			}
 
-			// Create tile entity
+			// Create foreground tile entity
 			const [newState, entity] = createEntity(state);
 			state = newState;
 
@@ -92,6 +102,18 @@ export function generateWorld(config: Partial<WorldConfig> = {}): GameState {
 
 			// Store in tile grid
 			state.tileGrid[y]![x] = entity;
+
+			// Create background tile for solid tiles (not air)
+			if (tileType !== TileType.Air) {
+				const [bgState, bgEntity] = createEntity(state);
+				state = bgState;
+
+				// Add background tile component (same type as foreground)
+				state = addBackgroundTile(state, bgEntity, createBackgroundTile(tileType));
+
+				// Store in background tile grid
+				state = setBackgroundTileAt(state, x, y, bgEntity);
+			}
 		}
 	}
 
@@ -151,6 +173,13 @@ export function getSurfaceY(state: GameState, x: number): number {
 		}
 	}
 	return state.worldHeight; // No surface found
+}
+
+/**
+ * Get permanent background type for a Y position.
+ */
+export function getPermanentBackgroundType(state: GameState, y: number): PermanentBackgroundType {
+	return y < state.horizonY ? PermanentBackgroundType.Sky : PermanentBackgroundType.Cave;
 }
 
 /**

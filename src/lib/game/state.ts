@@ -8,7 +8,7 @@
 import type { Entity } from '$lib/ecs/types';
 import type { Position } from '$lib/components/position';
 import type { Velocity } from '$lib/components/velocity';
-import type { Tile } from '$lib/components/tile';
+import type { Tile, BackgroundTile } from '$lib/components/tile';
 import type { Gnome } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
 import type { Camera } from '$lib/components/camera';
@@ -81,11 +81,17 @@ export interface GameState {
 	worldHeight: number;
 	/** 2D grid of tile entity IDs (null = air) */
 	tileGrid: (Entity | null)[][];
+	/** 2D grid of background tile entity IDs (null = show permanent background) */
+	backgroundTileGrid: (Entity | null)[][];
+	/** Y coordinate of horizon line (tiles above show sky, below show cave) */
+	horizonY: number;
 
 	// Component storage
 	positions: Map<Entity, Position>;
 	velocities: Map<Entity, Velocity>;
 	tiles: Map<Entity, Tile>;
+	/** Background tile components */
+	backgroundTiles: Map<Entity, BackgroundTile>;
 	gnomes: Map<Entity, Gnome>;
 	tasks: Map<Entity, Task>;
 	/** Resource entities in the world (dropped, not yet collected) */
@@ -109,6 +115,17 @@ export interface GameState {
 }
 
 /**
+ * Create an empty background tile grid.
+ */
+function createEmptyBackgroundGrid(width: number, height: number): (Entity | null)[][] {
+	const grid: (Entity | null)[][] = [];
+	for (let y = 0; y < height; y++) {
+		grid[y] = new Array(width).fill(null);
+	}
+	return grid;
+}
+
+/**
  * Create an empty game state.
  */
 export function createEmptyState(seed: number, width: number, height: number): GameState {
@@ -117,6 +134,12 @@ export function createEmptyState(seed: number, width: number, height: number): G
 	for (let y = 0; y < height; y++) {
 		tileGrid[y] = new Array(width).fill(null);
 	}
+
+	// Initialize empty background tile grid
+	const backgroundTileGrid = createEmptyBackgroundGrid(width, height);
+
+	// Default horizon at 30% from top
+	const horizonY = Math.floor(height * 0.3);
 
 	return {
 		seed,
@@ -127,9 +150,12 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		worldWidth: width,
 		worldHeight: height,
 		tileGrid,
+		backgroundTileGrid,
+		horizonY,
 		positions: new Map(),
 		velocities: new Map(),
 		tiles: new Map(),
+		backgroundTiles: new Map(),
 		gnomes: new Map(),
 		tasks: new Map(),
 		resources: new Map(),
@@ -230,6 +256,14 @@ export interface SerializedStorage {
 }
 
 /**
+ * Serialized background tile format.
+ */
+export interface SerializedBackgroundTile {
+	type: number;
+	durability: number;
+}
+
+/**
  * Serialized game state format for JSON storage.
  */
 export interface SerializedGameState {
@@ -241,9 +275,15 @@ export interface SerializedGameState {
 	worldWidth: number;
 	worldHeight: number;
 	tileGrid: (number | null)[][];
+	/** Background tile grid (may not exist in old saves) */
+	backgroundTileGrid?: (number | null)[][];
+	/** Horizon Y coordinate (may not exist in old saves) */
+	horizonY?: number;
 	positions: [number, Position][];
 	velocities: [number, Velocity][];
 	tiles: [number, Tile][];
+	/** Background tiles (may not exist in old saves) */
+	backgroundTiles?: [number, SerializedBackgroundTile][];
 	gnomes: [number, Gnome][];
 	tasks: [number, Task][];
 	resources: [number, Resource][];
@@ -264,6 +304,11 @@ export function serialize(state: GameState): string {
 		([id, storage]) => [id, { contents: Array.from(storage.contents.entries()) }]
 	);
 
+	// Convert background tiles to serializable format
+	const serializedBackgroundTiles: [number, SerializedBackgroundTile][] = Array.from(
+		state.backgroundTiles.entries()
+	).map(([id, tile]) => [id, { type: tile.type, durability: tile.durability }]);
+
 	const serialized: SerializedGameState = {
 		seed: state.seed,
 		tick: state.tick,
@@ -273,9 +318,12 @@ export function serialize(state: GameState): string {
 		worldWidth: state.worldWidth,
 		worldHeight: state.worldHeight,
 		tileGrid: state.tileGrid,
+		backgroundTileGrid: state.backgroundTileGrid,
+		horizonY: state.horizonY,
 		positions: Array.from(state.positions.entries()),
 		velocities: Array.from(state.velocities.entries()),
 		tiles: Array.from(state.tiles.entries()),
+		backgroundTiles: serializedBackgroundTiles,
 		gnomes: Array.from(state.gnomes.entries()),
 		tasks: Array.from(state.tasks.entries()),
 		resources: Array.from(state.resources.entries()),
@@ -287,6 +335,20 @@ export function serialize(state: GameState): string {
 		selectedGnomes: state.selectedGnomes
 	};
 	return JSON.stringify(serialized);
+}
+
+/**
+ * Create an empty background tile grid for backwards compatibility.
+ */
+function createEmptyBackgroundGridForDeserialize(
+	width: number,
+	height: number
+): (Entity | null)[][] {
+	const grid: (Entity | null)[][] = [];
+	for (let y = 0; y < height; y++) {
+		grid[y] = new Array(width).fill(null);
+	}
+	return grid;
 }
 
 /**
@@ -329,6 +391,25 @@ export function deserialize(json: string): GameState {
 		}
 	}
 
+	// Deserialize background tiles (backwards compatibility for old saves)
+	const backgroundTiles = new Map<Entity, BackgroundTile>();
+	if (data.backgroundTiles) {
+		for (const [id, serialized] of data.backgroundTiles) {
+			backgroundTiles.set(id, {
+				type: serialized.type,
+				durability: serialized.durability
+			});
+		}
+	}
+
+	// Handle background grid (backwards compatibility for old saves)
+	const backgroundTileGrid =
+		data.backgroundTileGrid ??
+		createEmptyBackgroundGridForDeserialize(data.worldWidth, data.worldHeight);
+
+	// Handle horizonY (backwards compatibility for old saves - default to 30%)
+	const horizonY = data.horizonY ?? Math.floor(data.worldHeight * 0.3);
+
 	return {
 		seed: data.seed,
 		tick: data.tick,
@@ -338,9 +419,12 @@ export function deserialize(json: string): GameState {
 		worldWidth: data.worldWidth,
 		worldHeight: data.worldHeight,
 		tileGrid: data.tileGrid,
+		backgroundTileGrid,
+		horizonY,
 		positions: new Map(data.positions),
 		velocities: new Map(data.velocities),
 		tiles: new Map(data.tiles),
+		backgroundTiles,
 		gnomes,
 		tasks,
 		resources,
