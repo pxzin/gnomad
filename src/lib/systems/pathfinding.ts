@@ -14,6 +14,9 @@ import type { GameState } from '$lib/game/state';
 import type { Position } from '$lib/components/position';
 import { isWalkable, isSolid, isInBounds } from '$lib/world-gen/generator';
 import { createBinaryHeap } from '$lib/utils/binary-heap';
+import { getClimbableSurface } from '$lib/systems/climbing';
+import { ClimbableSurfaceType } from '$lib/components/climbing';
+import { SURFACE_MODIFIERS } from '$lib/config/climbing';
 
 /**
  * Movement costs.
@@ -21,8 +24,15 @@ import { createBinaryHeap } from '$lib/utils/binary-heap';
 const COST_WALK = 1; // Normal horizontal movement
 const COST_STEP_UP = 2; // Step up one tile (like stairs)
 const COST_STEP_DOWN = 1; // Step down one tile
-const COST_CLIMB = 5; // Climb vertically (wall climbing penalty)
 const COST_FALL = 1; // Falling down
+
+/**
+ * Get the climbing cost for a specific surface type.
+ * Uses SURFACE_MODIFIERS lookup for surface-specific costs.
+ */
+function getClimbCost(surface: ClimbableSurfaceType): number {
+	return SURFACE_MODIFIERS[surface].pathfindingCost;
+}
 
 /**
  * Neighbor with movement cost.
@@ -164,11 +174,12 @@ function heuristic(x1: number, y1: number, x2: number, y2: number): number {
 }
 
 /**
- * Check if gnome can climb at position (has adjacent wall to hold onto).
+ * Check if gnome can climb at position (has climbable surface).
+ * Uses getClimbableSurface to detect BlockEdge, BackgroundBlock, or CaveBackground.
  */
 function canClimb(state: GameState, x: number, y: number): boolean {
-	// Can climb if there's a solid wall on either side
-	return isSolid(state, x - 1, y) || isSolid(state, x + 1, y);
+	const surface = getClimbableSurface(state, x, y);
+	return surface !== ClimbableSurfaceType.None;
 }
 
 /**
@@ -176,7 +187,7 @@ function canClimb(state: GameState, x: number, y: number): boolean {
  * Gnomes can:
  * - Walk horizontally (cost: 1)
  * - Step up/down one tile (cost: 2/1)
- * - Climb vertically in shafts (cost: 5) - requires adjacent wall
+ * - Climb vertically (cost: surface-specific, 5-8) - requires climbable surface
  * - Fall down (cost: 1)
  */
 function getNeighbors(state: GameState, x: number, y: number): Neighbor[] {
@@ -208,17 +219,39 @@ function getNeighbors(state: GameState, x: number, y: number): Neighbor[] {
 		) {
 			neighbors.push({ x: nx, y: y + 1, cost: COST_STEP_DOWN });
 		}
+
+		// Enter pit/shaft - move horizontally into a hole without ground below
+		// This allows gnomes to enter vertical shafts and pits from the surface
+		// The gnome will fall/climb down once inside
+		if (isInBounds(state, nx, y) && isWalkable(state, nx, y) && !isSolid(state, nx, y + 1)) {
+			// Check if there's a climbable surface at destination
+			const surface = getClimbableSurface(state, nx, y);
+			if (surface !== ClimbableSurfaceType.None) {
+				// Can enter and climb
+				neighbors.push({ x: nx, y, cost: getClimbCost(surface) });
+			} else {
+				// No climbable surface, but can still enter and fall
+				// Use higher cost to prefer climbing routes when available
+				neighbors.push({ x: nx, y, cost: COST_FALL + 2 });
+			}
+		}
 	}
 
 	// Vertical climbing (in shafts with walls to hold)
-	// Climb UP - requires walkable space above and a wall to hold
-	if (isInBounds(state, x, y - 1) && isWalkable(state, x, y - 1) && canClimb(state, x, y - 1)) {
-		neighbors.push({ x, y: y - 1, cost: COST_CLIMB });
+	// Climb UP - requires walkable space above and a climbable surface
+	if (isInBounds(state, x, y - 1) && isWalkable(state, x, y - 1)) {
+		const surface = getClimbableSurface(state, x, y - 1);
+		if (surface !== ClimbableSurfaceType.None) {
+			neighbors.push({ x, y: y - 1, cost: getClimbCost(surface) });
+		}
 	}
 
-	// Climb DOWN - can descend in a shaft with walls
-	if (isInBounds(state, x, y + 1) && isWalkable(state, x, y + 1) && canClimb(state, x, y + 1)) {
-		neighbors.push({ x, y: y + 1, cost: COST_CLIMB });
+	// Climb DOWN - can descend in a shaft with climbable surface
+	if (isInBounds(state, x, y + 1) && isWalkable(state, x, y + 1)) {
+		const surface = getClimbableSurface(state, x, y + 1);
+		if (surface !== ClimbableSurfaceType.None) {
+			neighbors.push({ x, y: y + 1, cost: getClimbCost(surface) });
+		}
 	}
 
 	// Free fall (down if no ground and not already added as climb)

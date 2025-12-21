@@ -17,3 +17,9 @@ export const GNOME_SPEED = 0.1;
 export const GNOME_IDLE_SPEED = 0.03;
 /** Damage dealt to tile per tick when mining */
 export const GNOME_MINE_RATE = 1;
+
+// Health
+/** Starting/max health for gnomes */
+export const GNOME_MAX_HEALTH = 100;
+/** HP recovered per tick when incapacitated */
+export const HEALTH_RECOVERY_RATE = 1;

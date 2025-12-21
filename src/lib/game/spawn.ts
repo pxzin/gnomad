@@ -5,14 +5,15 @@
  */
 
 import type { GameState } from './state';
-import { createEntity, addPosition, addGnome, addVelocity, addBuilding, addStorage } from '$lib/ecs/world';
+import { createEntity, addPosition, addGnome, addVelocity, addBuilding, addStorage, addHealth } from '$lib/ecs/world';
 import { createPosition } from '$lib/components/position';
 import { createVelocity } from '$lib/components/velocity';
-import { createGnome } from '$lib/components/gnome';
+import { createGnome, createHealth } from '$lib/components/gnome';
 import { findSpawnPosition, getSurfaceY, isSolid } from '$lib/world-gen/generator';
 import type { Entity } from '$lib/ecs/types';
 import { BuildingType, createBuilding, BUILDING_CONFIG } from '$lib/components/building';
 import { createStorage } from '$lib/components/storage';
+import { GNOME_MAX_HEALTH } from '$lib/config/physics';
 
 /**
  * Spawn a gnome at a specific position.
@@ -29,6 +30,7 @@ export function spawnGnomeAt(
 	updatedState = addPosition(updatedState, entity, createPosition(x, y));
 	updatedState = addVelocity(updatedState, entity, createVelocity());
 	updatedState = addGnome(updatedState, entity, createGnome());
+	updatedState = addHealth(updatedState, entity, createHealth(GNOME_MAX_HEALTH));
 
 	return [updatedState, entity];
 }

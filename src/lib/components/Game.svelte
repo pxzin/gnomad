@@ -12,6 +12,7 @@
 	} from '$lib/game/loop';
 	import { processCommand, canPlaceBuilding } from '$lib/game/command-processor';
 	import { physicsSystem } from '$lib/systems/physics';
+	import { climbingSystem } from '$lib/systems/climbing';
 	import { taskAssignmentSystem } from '$lib/systems/task-assignment';
 	import { miningSystem } from '$lib/systems/mining';
 	import { boundsSystem } from '$lib/systems/bounds';
@@ -20,6 +21,7 @@
 	import { collectTaskSystem } from '$lib/systems/collect-task';
 	import { depositSystem } from '$lib/systems/deposit';
 	import { idleBehaviorSystem } from '$lib/systems/idle-behavior';
+	import { healthSystem } from '$lib/systems/health';
 	import { loadGameAssets } from '$lib/assets/loader';
 	import {
 		createRenderer,
@@ -82,9 +84,11 @@
 	let buildModeKeyHandler: ((e: KeyboardEvent) => void) | null = null;
 
 	// Systems to run each tick
-	// Order matters: deposit runs before task assignment so gnomes with items deposit first
+	// Order matters: climbing before physics for state transitions, health after physics for damage/recovery
 	const systems = [
+		climbingSystem,
 		physicsSystem,
+		healthSystem, // After physics - handles fall damage and recovery
 		resourcePhysicsSystem,
 		depositSystem, // Before task assignment - gnomes with items deposit first
 		taskAssignmentSystem,

@@ -10,7 +10,7 @@ import type { GameState } from '$lib/game/state';
 import type { Position } from '$lib/components/position';
 import type { Velocity } from '$lib/components/velocity';
 import type { Tile } from '$lib/components/tile';
-import type { Gnome } from '$lib/components/gnome';
+import type { Gnome, Health } from '$lib/components/gnome';
 import type { Task } from '$lib/components/task';
 import type { Resource } from '$lib/components/resource';
 import type { Building } from '$lib/components/building';
@@ -40,6 +40,7 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 	const newResources = new Map(state.resources);
 	const newBuildings = new Map(state.buildings);
 	const newStorages = new Map(state.storages);
+	const newHealths = new Map(state.healths);
 
 	newPositions.delete(entity);
 	newVelocities.delete(entity);
@@ -49,6 +50,7 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 	newResources.delete(entity);
 	newBuildings.delete(entity);
 	newStorages.delete(entity);
+	newHealths.delete(entity);
 
 	return {
 		...state,
@@ -59,7 +61,8 @@ export function destroyEntity(state: GameState, entity: Entity): GameState {
 		tasks: newTasks,
 		resources: newResources,
 		buildings: newBuildings,
-		storages: newStorages
+		storages: newStorages,
+		healths: newHealths
 	};
 }
 
@@ -382,4 +385,47 @@ export function updateResource(
 	const newResources = new Map(state.resources);
 	newResources.set(entity, updater(current));
 	return { ...state, resources: newResources };
+}
+
+// ============================================================================
+// Health Component Accessors
+// ============================================================================
+
+/**
+ * Add a health component to an entity.
+ */
+export function addHealth(state: GameState, entity: Entity, health: Health): GameState {
+	const newHealths = new Map(state.healths);
+	newHealths.set(entity, health);
+	return { ...state, healths: newHealths };
+}
+
+/**
+ * Get a health component from an entity.
+ */
+export function getHealth(state: GameState, entity: Entity): Health | undefined {
+	return state.healths.get(entity);
+}
+
+/**
+ * Check if an entity has a health component.
+ */
+export function hasHealth(state: GameState, entity: Entity): boolean {
+	return state.healths.has(entity);
+}
+
+/**
+ * Update a health component for an entity.
+ */
+export function updateHealth(
+	state: GameState,
+	entity: Entity,
+	updater: (health: Health) => Health
+): GameState {
+	const current = state.healths.get(entity);
+	if (!current) return state;
+
+	const newHealths = new Map(state.healths);
+	newHealths.set(entity, updater(current));
+	return { ...state, healths: newHealths };
 }

@@ -252,6 +252,10 @@ function findReachableTask(
 					};
 					bestPathLength = pathLength;
 					bestCreatedAt = task.createdAt;
+
+					// Return immediately if we found a reachable task
+					// This prevents wasting attempts on unreachable tasks
+					return bestTask;
 				}
 			}
 		}

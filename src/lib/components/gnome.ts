@@ -32,6 +32,24 @@ export interface IdleBehavior {
 }
 
 /**
+ * Health component data.
+ * Tracks current and maximum health for entities that can take damage.
+ */
+export interface Health {
+	/** Current health points (0 = incapacitated) */
+	current: number;
+	/** Maximum health points (recovery target) */
+	max: number;
+}
+
+/**
+ * Create a new Health component with full health.
+ */
+export function createHealth(max: number): Health {
+	return { current: max, max };
+}
+
+/**
  * Item in a gnome's personal inventory.
  */
 export interface GnomeInventoryItem {
@@ -51,7 +69,9 @@ export enum GnomeState {
 	Mining = 'mining',
 	Falling = 'falling',
 	Collecting = 'collecting',
-	Depositing = 'depositing'
+	Depositing = 'depositing',
+	Climbing = 'climbing',
+	Incapacitated = 'incapacitated'
 }
 
 /**
@@ -72,6 +92,8 @@ export interface Gnome {
 	depositTargetStorage?: Entity;
 	/** Current idle behavior, null if working or truly idle */
 	idleBehavior?: IdleBehavior | null;
+	/** Y position when fall started (for damage calculation) */
+	fallStartY: number | null;
 }
 
 /**
@@ -83,7 +105,8 @@ export function createGnome(): Gnome {
 		currentTaskId: null,
 		path: null,
 		pathIndex: 0,
-		inventory: []
+		inventory: [],
+		fallStartY: null
 	};
 }
 

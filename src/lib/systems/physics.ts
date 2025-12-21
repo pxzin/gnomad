@@ -5,11 +5,15 @@
  */
 
 import type { GameState } from '$lib/game/state';
-import { getEntitiesWithGnome, updatePosition, updateGnome } from '$lib/ecs/world';
+import { getEntitiesWithGnome, updatePosition, updateGnome, updateTask } from '$lib/ecs/world';
 import { GnomeState, GNOME_SPEED } from '$lib/components/gnome';
 import { TaskType } from '$lib/components/task';
 import { isSolid } from '$lib/world-gen/generator';
 import { GRAVITY, TERMINAL_VELOCITY, GNOME_IDLE_SPEED } from '$lib/config/physics';
+import { GNOME_CLIMB_SPEED, FALL_DAMAGE_THRESHOLD, FALL_DAMAGE_PER_TILE, SURFACE_MODIFIERS } from '$lib/config/climbing';
+import { applyDamage } from '$lib/systems/health';
+import { getClimbableSurface } from '$lib/systems/climbing';
+import { ClimbableSurfaceType } from '$lib/components/climbing';
 
 /**
  * Physics system update.
@@ -62,10 +66,16 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 	let newX = position.x;
 	let newY = position.y;
 	let newState = gnome.state;
+	let newFallStartY = gnome.fallStartY;
 
-	// Handle walking movement FIRST (before gravity check)
+	// Handle walking and climbing movement FIRST (before gravity check)
 	// This allows gnomes to climb without being interrupted by gravity
-	if (gnome.state === GnomeState.Walking && gnome.path && gnome.pathIndex < gnome.path.length) {
+	const isMovingOnPath =
+		(gnome.state === GnomeState.Walking || gnome.state === GnomeState.Climbing) &&
+		gnome.path &&
+		gnome.pathIndex < gnome.path.length;
+
+	if (isMovingOnPath && gnome.path) {
 		const target = gnome.path[gnome.pathIndex]!;
 		const dx = target.x - newX;
 		const dy = target.y - newY;
@@ -102,8 +112,18 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 				state: newState
 			}));
 		} else {
-			// Move toward target - use slower speed for idle strolling
-			const speed = gnome.idleBehavior?.type === 'strolling' ? GNOME_IDLE_SPEED : GNOME_SPEED;
+			// Move toward target - determine speed based on state
+			let speed: number;
+			if (gnome.state === GnomeState.Climbing) {
+				// Apply surface-specific speed modifier
+				const surface = getClimbableSurface(state, newX, newY);
+				const modifier = SURFACE_MODIFIERS[surface].speedMultiplier;
+				speed = GNOME_CLIMB_SPEED * modifier;
+			} else if (gnome.idleBehavior?.type === 'strolling') {
+				speed = GNOME_IDLE_SPEED;
+			} else {
+				speed = GNOME_SPEED;
+			}
 			const moveX = (dx / dist) * speed;
 			const moveY = (dy / dist) * speed;
 			newX += moveX;
@@ -126,13 +146,44 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 		return state;
 	}
 
-	// Only apply gravity for Idle, Mining, or Falling gnomes
-	const canHold = canHoldPosition(state, newX, newY);
+	// Check if gnome should fall
+	// For stationary states (Mining, Collecting, Depositing, Idle), require ground below
+	// For climbing, can hold onto walls
+	const isStationaryState =
+		gnome.state === GnomeState.Mining ||
+		gnome.state === GnomeState.Collecting ||
+		gnome.state === GnomeState.Depositing ||
+		gnome.state === GnomeState.Idle;
+
+	const hasGround = isSolid(state, Math.floor(newX), Math.floor(newY) + 1);
+	const canHold = isStationaryState ? hasGround : canHoldPosition(state, newX, newY);
 
 	if (!canHold && gnome.state !== GnomeState.Falling && gnome.state !== GnomeState.Walking) {
-		// Start falling
+		// Start falling - record starting Y position for damage calculation
+		// Also clear current task since we lost our position
 		newState = GnomeState.Falling;
+		newFallStartY = newY;
 		newVy = 0;
+
+		// Clear task and path when falling unexpectedly
+		if (gnome.currentTaskId) {
+			// Unassign the task so another gnome can take it
+			const task = state.tasks.get(gnome.currentTaskId);
+			if (task) {
+				state = updateTask(state, gnome.currentTaskId, (t) => ({
+					...t,
+					assignedGnome: null
+				}));
+			}
+		}
+		if (gnome.currentTaskId || gnome.path) {
+			state = updateGnome(state, entity, (g) => ({
+				...g,
+				currentTaskId: null,
+				path: null,
+				pathIndex: 0
+			}));
+		}
 	}
 
 	if (gnome.state === GnomeState.Falling) {
@@ -140,12 +191,30 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 		newVy = Math.min(newVy + GRAVITY, TERMINAL_VELOCITY);
 		newY += newVy;
 
-		// Check for landing (ground or can climb)
-		if (canHoldPosition(state, newX, newY)) {
-			// Land on surface or grab wall
+		// Check for landing - must have actual ground to land on
+		const hasGroundBelow = isSolid(state, Math.floor(newX), Math.floor(newY) + 1);
+
+		if (hasGroundBelow) {
+			// Land on solid ground
 			newY = Math.floor(newY);
 			newVy = 0;
 			newState = GnomeState.Idle;
+
+			// Calculate fall damage if we have a recorded fall start
+			if (newFallStartY !== null) {
+				const fallDistance = newY - newFallStartY;
+				if (fallDistance > FALL_DAMAGE_THRESHOLD) {
+					const damage = (fallDistance - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_PER_TILE;
+					state = applyDamage(state, entity, damage);
+					// Re-fetch gnome state as applyDamage may have changed it to Incapacitated
+					const updatedGnome = state.gnomes.get(entity);
+					if (updatedGnome) {
+						newState = updatedGnome.state;
+					}
+				}
+				// Clear fall start after landing
+				newFallStartY = null;
+			}
 		}
 	}
 
@@ -157,9 +226,13 @@ function updateGnomePhysics(state: GameState, entity: number): GameState {
 	newVelocities.set(entity, { dx: newVx, dy: newVy });
 	state = { ...state, velocities: newVelocities };
 
-	// Update gnome state if needed
-	if (newState !== gnome.state) {
-		state = updateGnome(state, entity, (g) => ({ ...g, state: newState }));
+	// Update gnome state and fallStartY if needed
+	if (newState !== gnome.state || newFallStartY !== gnome.fallStartY) {
+		state = updateGnome(state, entity, (g) => ({
+			...g,
+			state: newState,
+			fallStartY: newFallStartY
+		}));
 	}
 
 	return state;

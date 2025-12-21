@@ -9,7 +9,8 @@ import type { Entity } from '$lib/ecs/types';
 import type { Position } from '$lib/components/position';
 import type { Velocity } from '$lib/components/velocity';
 import type { Tile, BackgroundTile } from '$lib/components/tile';
-import type { Gnome } from '$lib/components/gnome';
+import type { Gnome, Health } from '$lib/components/gnome';
+import { GNOME_MAX_HEALTH } from '$lib/config/physics';
 import type { Task } from '$lib/components/task';
 import type { Camera } from '$lib/components/camera';
 import { ResourceType, type Resource } from '$lib/components/resource';
@@ -100,6 +101,8 @@ export interface GameState {
 	buildings: Map<Entity, Building>;
 	/** Storage building contents */
 	storages: Map<Entity, Storage>;
+	/** Health components for all gnomes */
+	healths: Map<Entity, Health>;
 
 	// Inventory
 	/** Global collected resource counts */
@@ -161,6 +164,7 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		resources: new Map(),
 		buildings: new Map(),
 		storages: new Map(),
+		healths: new Map(),
 		inventory: createEmptyInventory(),
 		camera: createCamera((width * 16) / 2, (height * 16) / 2),
 		selectedTiles: [],
@@ -289,6 +293,8 @@ export interface SerializedGameState {
 	resources: [number, Resource][];
 	buildings: [number, Building][];
 	storages: [number, SerializedStorage][];
+	/** Health components (may not exist in old saves) */
+	healths?: [number, Health][];
 	inventory: ResourceInventory;
 	camera: Camera;
 	selectedTiles: { x: number; y: number }[];
@@ -329,6 +335,7 @@ export function serialize(state: GameState): string {
 		resources: Array.from(state.resources.entries()),
 		buildings: Array.from(state.buildings.entries()),
 		storages: serializedStorages,
+		healths: Array.from(state.healths.entries()),
 		inventory: state.inventory,
 		camera: state.camera,
 		selectedTiles: state.selectedTiles,
@@ -367,11 +374,32 @@ export function deserialize(json: string): GameState {
 		}
 	}
 
-	// Ensure gnomes have inventory field (backwards compatibility)
+	// Ensure gnomes have inventory and fallStartY fields (backwards compatibility)
 	const gnomes = new Map(data.gnomes);
 	for (const [id, gnome] of gnomes) {
+		let updated = gnome;
 		if (!gnome.inventory) {
-			gnomes.set(id, { ...gnome, inventory: [] });
+			updated = { ...updated, inventory: [] };
+		}
+		if (gnome.fallStartY === undefined) {
+			updated = { ...updated, fallStartY: null };
+		}
+		if (updated !== gnome) {
+			gnomes.set(id, updated);
+		}
+	}
+
+	// Handle healths (backwards compatibility - create 100/100 for existing gnomes)
+	const healths = new Map<Entity, Health>();
+	if (data.healths) {
+		for (const [id, health] of data.healths) {
+			healths.set(id, health);
+		}
+	}
+	// Ensure all gnomes have health
+	for (const [id] of gnomes) {
+		if (!healths.has(id)) {
+			healths.set(id, { current: GNOME_MAX_HEALTH, max: GNOME_MAX_HEALTH });
 		}
 	}
 
@@ -430,6 +458,7 @@ export function deserialize(json: string): GameState {
 		resources,
 		buildings: new Map(data.buildings ?? []),
 		storages,
+		healths,
 		inventory: data.inventory ?? { dirt: 0, stone: 0 },
 		camera: data.camera,
 		selectedTiles: data.selectedTiles,
