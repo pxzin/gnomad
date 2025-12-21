@@ -41,9 +41,9 @@ npm test && npm run lint
 TypeScript 5.x (strict mode enabled): Follow standard conventions
 
 ## Recent Changes
+- 011-climbing-mechanics: Added TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0
 - 009-organic-idle-behavior: Added TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0
 - 008-task-priority: Added TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0
-- 007-resource-logistics: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, PixiJS v8
 
 
 <!-- MANUAL ADDITIONS START -->
