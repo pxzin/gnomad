@@ -7,10 +7,11 @@
  */
 
 import type { GameState } from '$lib/game/state';
-import { updatePosition, updateResource, createEntity, addTask } from '$lib/ecs/world';
+import { updatePosition, updateResource, createEntity, addTask, updateGnome } from '$lib/ecs/world';
 import { isSolid } from '$lib/world-gen/generator';
 import { GRAVITY, TERMINAL_VELOCITY } from '$lib/config/physics';
 import { createCollectTask } from '$lib/components/task';
+import { GnomeState } from '$lib/components/gnome';
 
 /**
  * Resource physics system update.
@@ -88,6 +89,8 @@ export function resourcePhysicsSystem(state: GameState): GameState {
 
 /**
  * Create a Collect task for a grounded resource.
+ * If a task already exists for this resource, update its position.
+ * Also unassigns any gnome that was heading to the old position.
  */
 function createCollectTaskForResource(
 	state: GameState,
@@ -95,21 +98,45 @@ function createCollectTaskForResource(
 	x: number,
 	y: number
 ): GameState {
+	const targetX = Math.floor(x);
+	const targetY = Math.floor(y);
+
 	// Check if a Collect task already exists for this resource
-	for (const task of state.tasks.values()) {
+	for (const [taskEntity, task] of state.tasks) {
 		if (task.targetEntity === resourceEntity) {
-			// Task already exists
+			// Task already exists - update its position if it changed
+			if (task.targetX !== targetX || task.targetY !== targetY) {
+				let newState = state;
+
+				// If a gnome was assigned to this task, reset them to idle
+				// so they can get reassigned with a new path
+				if (task.assignedGnome !== null) {
+					newState = updateGnome(newState, task.assignedGnome, (g) => ({
+						...g,
+						state: GnomeState.Idle,
+						currentTaskId: null,
+						path: null,
+						pathIndex: 0
+					}));
+				}
+
+				// Update task position and unassign gnome
+				const newTasks = new Map(newState.tasks);
+				newTasks.set(taskEntity, {
+					...task,
+					targetX,
+					targetY,
+					assignedGnome: null
+				});
+				return { ...newState, tasks: newTasks };
+			}
+			// Position unchanged, no update needed
 			return state;
 		}
 	}
 
 	// Create new Collect task
 	const [newState, taskEntity] = createEntity(state);
-	const task = createCollectTask(
-		Math.floor(x),
-		Math.floor(y),
-		resourceEntity,
-		newState.tick
-	);
+	const task = createCollectTask(targetX, targetY, resourceEntity, newState.tick);
 	return addTask(newState, taskEntity, task);
 }
