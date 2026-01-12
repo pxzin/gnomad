@@ -9,7 +9,7 @@ import { Assets, Texture } from 'pixi.js';
 
 /** Asset paths relative to static folder */
 const ASSET_PATHS = {
-	gnomeIdle: '/sprites/gnomes/gnome-idle.png'
+	gnomeIdle: '/assets/sprites/gnome/gnome-idle.png'
 } as const;
 
 /** Cached textures */
