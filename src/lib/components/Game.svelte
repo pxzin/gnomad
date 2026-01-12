@@ -37,6 +37,7 @@
 	import type { Command } from '$lib/game/commands';
 	import { spawnGnomeCommand, placeBuilding } from '$lib/game/commands';
 	import { saveToLocalStorage, loadFromLocalStorage, type GameState } from '$lib/game/state';
+	import { TILE_SIZE } from '$lib/config/rendering';
 	import { BuildingType } from '$lib/components/building';
 	import HudOverlay from './hud/HudOverlay.svelte';
 
@@ -111,7 +112,25 @@
 			// Spawn initial storage (before gnome so it renders behind)
 			const storageResult = spawnStorage(state);
 			if (storageResult) {
-				state = storageResult[0];
+				const [newState, storageEntity] = storageResult;
+				state = newState;
+
+				// Center camera on storage building
+				const storagePos = state.positions.get(storageEntity);
+				if (storagePos) {
+					const camX = storagePos.x * TILE_SIZE + TILE_SIZE; // Center on 2x2 building
+					const camY = storagePos.y * TILE_SIZE + TILE_SIZE;
+					state = {
+						...state,
+						camera: {
+							...state.camera,
+							x: camX,
+							y: camY,
+							targetX: camX,
+							targetY: camY
+						}
+					};
+				}
 			}
 
 			// Spawn initial gnome

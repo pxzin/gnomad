@@ -2,6 +2,7 @@
  * Asset Loader
  *
  * Loads and caches sprite textures for the game.
+ * Uses nearest-neighbor scaling for pixel-perfect rendering.
  */
 
 import { Assets, Texture } from 'pixi.js';
@@ -18,6 +19,14 @@ let gnomeIdleTexture: Texture | null = null;
 let assetsLoaded = false;
 
 /**
+ * Configure texture for pixel-perfect rendering.
+ * Uses nearest-neighbor scaling to prevent blur on pixel art.
+ */
+function configurePixelPerfect(texture: Texture): void {
+	texture.source.scaleMode = 'nearest';
+}
+
+/**
  * Load all game assets.
  * Should be called once during game initialization.
  */
@@ -26,6 +35,9 @@ export async function loadGameAssets(): Promise<void> {
 
 	try {
 		gnomeIdleTexture = await Assets.load(ASSET_PATHS.gnomeIdle);
+		if (gnomeIdleTexture) {
+			configurePixelPerfect(gnomeIdleTexture);
+		}
 		assetsLoaded = true;
 	} catch (error) {
 		console.error('Failed to load game assets:', error);

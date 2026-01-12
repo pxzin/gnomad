@@ -6,6 +6,7 @@
  */
 
 import { TaskPriority } from '$lib/components/task';
+import { BACKGROUND_DIM_FACTOR } from './rendering';
 
 // Selection & Highlighting
 /** Yellow selection highlight color */
@@ -52,17 +53,14 @@ export const PERMANENT_BACKGROUND_SKY_COLOR = 0x87ceeb;
 /** Cave/rock color for below horizon */
 export const PERMANENT_BACKGROUND_CAVE_COLOR = 0x2a2a2a;
 
-/** Background block color multiplier (60% brightness = darker than foreground) */
-export const BACKGROUND_DARKEN_FACTOR = 0.6;
-
 /**
  * Calculate background block color from foreground color.
- * Darkens the color by BACKGROUND_DARKEN_FACTOR.
+ * Darkens the color by BACKGROUND_DIM_FACTOR from rendering config.
  */
 export function getBackgroundBlockColor(foregroundColor: number): number {
-	const r = Math.floor(((foregroundColor >> 16) & 0xff) * BACKGROUND_DARKEN_FACTOR);
-	const g = Math.floor(((foregroundColor >> 8) & 0xff) * BACKGROUND_DARKEN_FACTOR);
-	const b = Math.floor((foregroundColor & 0xff) * BACKGROUND_DARKEN_FACTOR);
+	const r = Math.floor(((foregroundColor >> 16) & 0xff) * BACKGROUND_DIM_FACTOR);
+	const g = Math.floor(((foregroundColor >> 8) & 0xff) * BACKGROUND_DIM_FACTOR);
+	const b = Math.floor((foregroundColor & 0xff) * BACKGROUND_DIM_FACTOR);
 	return (r << 16) | (g << 8) | b;
 }
 

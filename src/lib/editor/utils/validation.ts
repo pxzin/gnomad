@@ -91,6 +91,8 @@ export function validateAssetDetailed(data: unknown): AssetValidationError[] {
 		'gnome-walk',
 		'gnome-dig',
 		'gnome-climb',
+		'gnome-fall',
+		'gnome-sheet',
 		'structure-wall',
 		'structure-door',
 		'structure-ladder',

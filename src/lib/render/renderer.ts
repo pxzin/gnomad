@@ -22,13 +22,9 @@ import {
 	PERMANENT_BACKGROUND_CAVE_COLOR,
 	BACKGROUND_TILE_COLORS
 } from '$lib/config/colors';
+import { TILE_SIZE, SPRITE_WIDTH, SPRITE_HEIGHT } from '$lib/config/rendering';
 import { isWorldBoundary } from '$lib/world-gen/generator';
 import { getBackgroundTileAt } from '$lib/ecs/background';
-
-/**
- * Tile size in pixels.
- */
-export const TILE_SIZE = 16;
 
 /**
  * Cached tile state for dirty checking.
@@ -604,6 +600,9 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 	const activeGnomes = new Set<number>();
 	const gnomeTexture = getGnomeIdleTexture();
 
+	// Gnome sprite offset: sprite height (48) minus tile height (32) = 16px
+	const GNOME_Y_OFFSET = SPRITE_HEIGHT - TILE_SIZE;
+
 	for (const [entity, gnome] of state.gnomes) {
 		activeGnomes.add(entity);
 
@@ -611,9 +610,9 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 		if (!position) continue;
 
 		// Calculate screen position
-		// Sprite is 16x24, so offset Y to align feet with tile bottom
+		// Sprite is 32x48, so offset Y to align feet with tile bottom
 		const screenX = position.x * TILE_SIZE;
-		const screenY = position.y * TILE_SIZE - 8; // Offset up by 8px (24-16=8)
+		const screenY = position.y * TILE_SIZE - GNOME_Y_OFFSET;
 
 		// Check cache for dirty checking
 		const cached = renderer.gnomeCache.get(entity);
@@ -665,6 +664,9 @@ function renderGnomes(renderer: Renderer, state: GameState, interpolation: numbe
 function renderSocializationIndicators(renderer: Renderer, state: GameState): void {
 	renderer.socializationGraphics.clear();
 
+	// Indicator position: above gnome sprite (sprite height 48, offset 16 from tile)
+	const INDICATOR_Y_OFFSET = SPRITE_HEIGHT + 4; // 4px above gnome head
+
 	for (const [entity, gnome] of state.gnomes) {
 		// Only render for socializing gnomes
 		if (gnome.idleBehavior?.type !== 'socializing') continue;
@@ -673,9 +675,8 @@ function renderSocializationIndicators(renderer: Renderer, state: GameState): vo
 		if (!position) continue;
 
 		// Calculate screen position (above gnome sprite)
-		// Sprite is 16x24 positioned at (x*TILE_SIZE, y*TILE_SIZE - 8)
 		const screenX = position.x * TILE_SIZE + TILE_SIZE * 0.5;
-		const screenY = position.y * TILE_SIZE - 14; // Above the 24px tall gnome sprite
+		const screenY = position.y * TILE_SIZE - INDICATOR_Y_OFFSET;
 
 		// Draw "..." ellipsis as 3 small circles
 		const dotRadius = 1.5;

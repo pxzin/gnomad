@@ -35,6 +35,7 @@ export interface AnimationMetadata {
 
 /**
  * Predefined canvas sizes for game assets.
+ * Standard sizes: 32x32 tiles, 32x48 gnome sprites
  */
 export type AssetPreset =
 	| 'tile-16'
@@ -43,6 +44,8 @@ export type AssetPreset =
 	| 'gnome-walk'
 	| 'gnome-dig'
 	| 'gnome-climb'
+	| 'gnome-fall'
+	| 'gnome-sheet'
 	| 'structure-wall'
 	| 'structure-door'
 	| 'structure-ladder'

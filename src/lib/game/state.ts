@@ -18,6 +18,7 @@ import type { Building } from '$lib/components/building';
 import type { Storage } from '$lib/components/storage';
 import { createCamera, CAMERA_LERP_SPEED, MIN_ZOOM, MAX_ZOOM } from '$lib/components/camera';
 import { GameSpeed } from './commands';
+import { TILE_SIZE } from '$lib/config/rendering';
 
 /**
  * Global resource inventory.
@@ -166,7 +167,7 @@ export function createEmptyState(seed: number, width: number, height: number): G
 		storages: new Map(),
 		healths: new Map(),
 		inventory: createEmptyInventory(),
-		camera: createCamera((width * 16) / 2, (height * 16) / 2),
+		camera: createCamera((width * TILE_SIZE) / 2, (height * TILE_SIZE) / 2),
 		selectedTiles: [],
 		selectedGnomes: []
 	};

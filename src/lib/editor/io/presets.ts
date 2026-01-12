@@ -3,122 +3,140 @@
  */
 
 import type { AssetPreset, AssetCategory, PresetConfig, PixelArtAsset } from '../types.js';
+import { TILE_SIZE, SPRITE_WIDTH, SPRITE_HEIGHT } from '$lib/config/rendering';
 
 /**
  * All available preset configurations.
+ * Uses centralized rendering constants for game asset dimensions.
  */
 export const PRESET_CONFIGS: PresetConfig[] = [
-	// Tiles
+	// Tiles (32x32 standard)
+	{
+		name: 'tile-32',
+		width: TILE_SIZE,
+		height: TILE_SIZE,
+		category: 'tiles',
+		description: 'Standard terrain tile (32x32)'
+	},
 	{
 		name: 'tile-16',
 		width: 16,
 		height: 16,
 		category: 'tiles',
-		description: 'Standard terrain tile'
-	},
-	{
-		name: 'tile-32',
-		width: 32,
-		height: 32,
-		category: 'tiles',
-		description: 'Large terrain feature'
+		description: 'Legacy tile (16x16)'
 	},
 
-	// Gnomes
+	// Gnomes (32x48 standard)
 	{
 		name: 'gnome-idle',
-		width: 16,
-		height: 24,
+		width: SPRITE_WIDTH,
+		height: SPRITE_HEIGHT,
 		category: 'gnomes',
-		description: 'Gnome idle pose'
+		description: 'Gnome idle pose (32x48)'
 	},
 	{
 		name: 'gnome-walk',
-		width: 64,
-		height: 24,
+		width: SPRITE_WIDTH * 6,
+		height: SPRITE_HEIGHT,
 		category: 'gnomes',
-		description: 'Walk cycle (4 frames)',
-		animation: { frameWidth: 16, frameHeight: 24, frameCount: 4 }
+		description: 'Walk cycle (6 frames)',
+		animation: { frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, frameCount: 6 }
 	},
 	{
 		name: 'gnome-dig',
-		width: 64,
-		height: 24,
+		width: SPRITE_WIDTH * 6,
+		height: SPRITE_HEIGHT,
 		category: 'gnomes',
-		description: 'Mining animation (4 frames)',
-		animation: { frameWidth: 16, frameHeight: 24, frameCount: 4 }
+		description: 'Mining animation (6 frames)',
+		animation: { frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, frameCount: 6 }
 	},
 	{
 		name: 'gnome-climb',
-		width: 48,
-		height: 24,
+		width: SPRITE_WIDTH * 4,
+		height: SPRITE_HEIGHT,
 		category: 'gnomes',
-		description: 'Climbing animation (3 frames)',
-		animation: { frameWidth: 16, frameHeight: 24, frameCount: 3 }
+		description: 'Climbing animation (4 frames)',
+		animation: { frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, frameCount: 4 }
+	},
+	{
+		name: 'gnome-fall',
+		width: SPRITE_WIDTH * 2,
+		height: SPRITE_HEIGHT,
+		category: 'gnomes',
+		description: 'Falling animation (2 frames)',
+		animation: { frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, frameCount: 2 }
+	},
+	{
+		name: 'gnome-sheet',
+		width: SPRITE_WIDTH * 10,
+		height: SPRITE_HEIGHT * 10,
+		category: 'gnomes',
+		description: 'Full sprite sheet (320x480)',
+		animation: { frameWidth: SPRITE_WIDTH, frameHeight: SPRITE_HEIGHT, frameCount: 40 }
 	},
 
-	// Structures
+	// Structures (32x32 standard)
 	{
 		name: 'structure-wall',
-		width: 16,
-		height: 16,
+		width: TILE_SIZE,
+		height: TILE_SIZE,
 		category: 'structures',
-		description: 'Wall segment'
+		description: 'Wall segment (32x32)'
 	},
 	{
 		name: 'structure-door',
-		width: 16,
-		height: 32,
+		width: TILE_SIZE,
+		height: TILE_SIZE * 2,
 		category: 'structures',
-		description: 'Door (2 tiles)'
+		description: 'Door (2 tiles, 32x64)'
 	},
 	{
 		name: 'structure-ladder',
-		width: 16,
-		height: 16,
+		width: TILE_SIZE,
+		height: TILE_SIZE,
 		category: 'structures',
-		description: 'Ladder segment'
+		description: 'Ladder segment (32x32)'
 	},
 
 	// UI
 	{
 		name: 'ui-button',
-		width: 32,
-		height: 32,
+		width: 64,
+		height: 64,
 		category: 'ui',
-		description: 'UI button base'
+		description: 'UI button base (64x64)'
 	},
 	{
 		name: 'ui-icon',
-		width: 16,
-		height: 16,
+		width: 32,
+		height: 32,
 		category: 'ui',
-		description: 'Small icon'
+		description: 'Icon (32x32)'
 	},
 
 	// Resources
 	{
 		name: 'resource-item',
-		width: 12,
-		height: 12,
+		width: 16,
+		height: 16,
 		category: 'resources',
-		description: 'Resource icon'
+		description: 'Resource icon (16x16)'
 	},
 
 	// Vegetation
 	{
 		name: 'tree',
-		width: 48,
-		height: 64,
+		width: TILE_SIZE * 2,
+		height: TILE_SIZE * 3,
 		category: 'vegetation',
-		description: 'Surface tree'
+		description: 'Surface tree (64x96)'
 	},
 	{
 		name: 'bush',
-		width: 24,
-		height: 16,
+		width: TILE_SIZE,
+		height: TILE_SIZE,
 		category: 'vegetation',
-		description: 'Small vegetation'
+		description: 'Small vegetation (32x32)'
 	}
 ];
 

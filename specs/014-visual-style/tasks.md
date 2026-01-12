@@ -19,9 +19,9 @@
 
 **Purpose**: Project initialization and rendering configuration
 
-- [ ] T001 Create `src/lib/config/rendering.ts` with TILE_SIZE (32), SPRITE_WIDTH (32), SPRITE_HEIGHT (48), BACKGROUND_DIM_FACTOR (0.6), ZOOM_LEVELS, DEFAULT_ZOOM constants
-- [ ] T002 [P] Create directory structure: `static/assets/tiles/terrain/`, `static/assets/tiles/backgrounds/`, `static/assets/sprites/gnome/`, `static/assets/ui/`
-- [ ] T003 [P] Update PixiJS texture loading to use `scaleMode = 'nearest'` for pixel-perfect rendering in existing render initialization code
+- [x] T001 Create `src/lib/config/rendering.ts` with TILE_SIZE (32), SPRITE_WIDTH (32), SPRITE_HEIGHT (48), BACKGROUND_DIM_FACTOR (0.6), ZOOM_LEVELS, DEFAULT_ZOOM constants
+- [x] T002 [P] Create directory structure: `static/assets/tiles/terrain/`, `static/assets/tiles/backgrounds/`, `static/assets/sprites/gnome/`, `static/assets/ui/`
+- [x] T003 [P] Update PixiJS texture loading to use `scaleMode = 'nearest'` for pixel-perfect rendering in existing render initialization code
 
 ---
 
@@ -31,11 +31,11 @@
 
 **WARNING**: No user story work can begin until this phase is complete
 
-- [ ] T004 Update all hardcoded tile size references (16) to use `TILE_SIZE` constant from `src/lib/config/rendering.ts`
-- [ ] T005 Update camera/viewport calculations in `src/lib/render/` to account for new 32x32 tile size
-- [ ] T006 [P] Update sprite frame rectangle calculations to use SPRITE_WIDTH and SPRITE_HEIGHT from config
-- [ ] T007 [P] Implement background dimming function in `src/lib/render/` using BACKGROUND_DIM_FACTOR (apply tint 0x999999 to background tiles)
-- [ ] T008 Update gnome sprite rendering to use new 32x48 dimensions from config
+- [x] T004 Update all hardcoded tile size references (16) to use `TILE_SIZE` constant from `src/lib/config/rendering.ts`
+- [x] T005 Update camera/viewport calculations in `src/lib/render/` to account for new 32x32 tile size
+- [x] T006 [P] Update sprite frame rectangle calculations to use SPRITE_WIDTH and SPRITE_HEIGHT from config
+- [x] T007 [P] Implement background dimming function in `src/lib/render/` using BACKGROUND_DIM_FACTOR (apply tint 0x999999 to background tiles)
+- [x] T008 Update gnome sprite rendering to use new 32x48 dimensions from config
 
 **Checkpoint**: Foundation ready - rendering supports 32x32 tiles and 32x48 sprites with background dimming
 
@@ -107,15 +107,15 @@
 
 ### Implementation for User Story 4
 
-- [ ] T028 [US4] Create comprehensive style guide document in `docs/style-guide.md` covering:
+- [x] T028 [US4] Create comprehensive style guide document in `docs/style-guide.md` covering:
   - Resolution specifications (32x32 tiles, 32x48 sprites)
   - Outline requirements (1px dark: #000000, #3D2817, or #2A2A2A)
   - Color guidelines (unrestricted palette, top-left lighting)
   - Animation requirements (frame counts, timing)
   - File format contract (32-bit PNG, RGBA, sRGB)
   - Naming conventions (type-name-variant.png)
-- [ ] T029 [P] [US4] Create asset compliance checklist as appendix to style guide
-- [ ] T030 [P] [US4] Add example assets section with annotated reference images
+- [x] T029 [P] [US4] Create asset compliance checklist as appendix to style guide
+- [x] T030 [P] [US4] Add example assets section with annotated reference images
 
 **Checkpoint**: Style guide complete and usable by external artists
 
@@ -132,7 +132,7 @@
   - `tile-stone-ore.png`
 - [ ] T032 [P] Create sky gradient tiles/texture in `static/assets/tiles/backgrounds/bg-sky-gradient.png`
 - [ ] T033 [P] Create water tiles (surface and deep variants) in `static/assets/tiles/terrain/`
-- [ ] T034 Update any remaining hardcoded pixel values to use rendering.ts constants
+- [x] T034 Update any remaining hardcoded pixel values to use rendering.ts constants
 - [ ] T035 Run full visual validation per quickstart.md checklist (all tiles 32x32, gnomes 32x48, no blur at zoom levels, background dimming working)
 - [ ] T036 Performance validation: verify 60 FPS rendering with new 32x32 assets
 

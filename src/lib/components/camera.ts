@@ -21,13 +21,18 @@ export interface Camera {
 }
 
 /**
+ * Default initial zoom level (0.5 = 50%, shows more area).
+ */
+export const DEFAULT_INITIAL_ZOOM = 0.5;
+
+/**
  * Create a new Camera with default settings.
  */
 export function createCamera(x: number = 0, y: number = 0): Camera {
 	return {
 		x,
 		y,
-		zoom: 1.0,
+		zoom: DEFAULT_INITIAL_ZOOM,
 		targetX: x,
 		targetY: y
 	};
