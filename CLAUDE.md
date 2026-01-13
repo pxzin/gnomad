@@ -9,6 +9,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-11
 - N/A (in-memory game state, localStorage for saves) (008-task-priority)
 - TypeScript 5.x (strict mode) - for config constants only + PixiJS v8 (rendering), PNG files (assets) (014-visual-style)
 - PNG sprite sheets and individual tile images in `static/assets/` (014-visual-style)
+- TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, Svelte 5 (runes), Canvas 2D API, PixiJS v8 (preview), browser-fs-access (015-editor-advanced-tools)
+- JSON files (source assets), PNG files (exports), browser localStorage (preferences) (015-editor-advanced-tools)
 
 - TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, Canvas 2D API (editing), PixiJS v8 (preview), browser-fs-access (file operations) (002-pixel-art-editor)
 - JSON files (source assets), PNG files (exports), no database (002-pixel-art-editor)
@@ -43,9 +45,9 @@ npm test && npm run lint
 TypeScript 5.x (strict mode enabled): Follow standard conventions
 
 ## Recent Changes
+- 015-editor-advanced-tools: Added TypeScript 5.x (strict mode enabled) + SvelteKit 2.x, Svelte 5 (runes), Canvas 2D API, PixiJS v8 (preview), browser-fs-access
 - 014-visual-style: Added TypeScript 5.x (strict mode) - for config constants only + PixiJS v8 (rendering), PNG files (assets)
 - 011-climbing-mechanics: Added TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0
-- 009-organic-idle-behavior: Added TypeScript 5.9.3 (strict mode enabled) + SvelteKit 2.48.5, Svelte 5.43.8, PixiJS 8.0.0
 
 
 <!-- MANUAL ADDITIONS START -->
