@@ -2,7 +2,7 @@
  * Coordinate utilities for the Pixel Art Editor
  */
 
-import type { PixelArtAsset } from '../types.js';
+import type { PixelArtAssetV2 } from '../types.js';
 
 /**
  * Convert mouse event to pixel coordinates.
@@ -22,7 +22,7 @@ export function eventToPixel(
 /**
  * Check if coordinates are within asset bounds.
  */
-export function isInBounds(asset: PixelArtAsset, x: number, y: number): boolean {
+export function isInBounds(asset: PixelArtAssetV2, x: number, y: number): boolean {
 	return x >= 0 && x < asset.width && y >= 0 && y < asset.height;
 }
 
@@ -30,7 +30,7 @@ export function isInBounds(asset: PixelArtAsset, x: number, y: number): boolean 
  * Clamp coordinates to asset bounds.
  */
 export function clampToBounds(
-	asset: PixelArtAsset,
+	asset: PixelArtAssetV2,
 	x: number,
 	y: number
 ): { x: number; y: number } {

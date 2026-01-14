@@ -6,10 +6,12 @@
 	import PresetSelector from '$lib/editor/components/PresetSelector.svelte';
 	import Preview from '$lib/editor/components/Preview.svelte';
 	import RenameModal from '$lib/editor/components/RenameModal.svelte';
+	import LayerPanel from '$lib/editor/components/LayerPanel.svelte';
+	import Timeline from '$lib/editor/components/Timeline.svelte';
 	import { createEditorStore } from '$lib/editor/state/editor.svelte.js';
 	import { createKeyboardHandler } from '$lib/editor/utils/keyboard.js';
 	import { openAssetFile, saveAssetFile, saveAssetFileAs } from '$lib/editor/io/file.js';
-	import { exportPng } from '$lib/editor/io/png.js';
+	import { exportPngV2, exportSpriteSheet, exportSpriteSheetMetadataFile } from '$lib/editor/io/png.js';
 	import { devSaveJson, devSavePng } from '$lib/editor/io/dev-save.js';
 
 	const store = createEditorStore();
@@ -26,6 +28,8 @@
 	const pngFileHandle = $derived(store.state.pngFileHandle);
 	const canUndo = $derived(store.canUndo());
 	const canRedo = $derived(store.canRedo());
+	const frameCount = $derived(asset?.layers[0]?.frames.length ?? 1);
+	const hasAnimation = $derived(frameCount > 1);
 
 	// File operation callbacks
 	async function handleSave() {
@@ -78,7 +82,8 @@
 	async function handleExportPng() {
 		if (!asset) return;
 		try {
-			const handle = await exportPng(asset, undefined, pngFileHandle);
+			// Export current frame (frame 0 by default)
+			const handle = await exportPngV2(asset, store.state.currentFrame, undefined, pngFileHandle);
 			if (handle) {
 				store.setPngHandle(handle);
 			}
@@ -88,12 +93,40 @@
 		}
 	}
 
+	async function handleExportSpriteSheet() {
+		if (!asset) return;
+		try {
+			// Export sprite sheet PNG
+			await exportSpriteSheet(asset, 'horizontal');
+			// Export metadata JSON
+			await exportSpriteSheetMetadataFile(asset, 'horizontal');
+		} catch (error) {
+			console.error('Failed to export sprite sheet:', error);
+			alert(`Failed to export sprite sheet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		}
+	}
+
+	async function handlePaste() {
+		if (!asset) return;
+		try {
+			const success = await store.pasteFromClipboard();
+			if (!success) {
+				// Silently ignore if no image in clipboard
+				console.log('No image found in clipboard');
+			}
+		} catch (error) {
+			console.error('Failed to paste:', error);
+			alert(`Failed to paste: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		}
+	}
+
 	// Keyboard handler with file operation callbacks
 	const handleKeydown = createKeyboardHandler(store, {
 		onSave: handleSave,
 		onSaveAs: handleSaveAs,
 		onOpenAsset: handleOpen,
-		onExportPng: handleExportPng
+		onExportPng: handleExportPng,
+		onPaste: handlePaste
 	});
 
 	// Unsaved changes warning
@@ -202,6 +235,15 @@
 			>
 				Export PNG
 			</button>
+			{#if hasAnimation}
+				<button
+					class="file-btn export-btn spritesheet-btn"
+					onclick={handleExportSpriteSheet}
+					title="Export Sprite Sheet (PNG + JSON)"
+				>
+					Export Sprite Sheet
+				</button>
+			{/if}
 			{#if dev}
 				<span class="dev-separator">|</span>
 				<button
@@ -268,6 +310,7 @@
 
 	<main class="canvas-area">
 		<Canvas {store} />
+		<Timeline {store} />
 	</main>
 
 	<aside class="sidebar">
@@ -287,10 +330,12 @@
 					<dd>{asset.width} x {asset.height}</dd>
 					<dt>Preset</dt>
 					<dd>{asset.preset}</dd>
-					<dt>Pixels</dt>
-					<dd>{asset.pixels.length}</dd>
+					<dt>Frames</dt>
+					<dd>{asset.layers[0]?.frames.length ?? 1}</dd>
 				</dl>
 			</div>
+
+			<LayerPanel {store} />
 		{/if}
 
 		<Preview {store} />
@@ -361,6 +406,14 @@
 
 	.export-btn:hover:not(:disabled) {
 		background: #3d7a43;
+	}
+
+	.spritesheet-btn {
+		background: #4a3d8b;
+	}
+
+	.spritesheet-btn:hover:not(:disabled) {
+		background: #5d4da0;
 	}
 
 	.dev-separator {
@@ -442,6 +495,13 @@
 	}
 
 	.canvas-area {
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.canvas-area :global(> :first-child) {
+		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;

@@ -19,11 +19,11 @@
 
 **Purpose**: Project initialization and type definitions
 
-- [ ] T001 Add Layer, Timeline, OnionSkinSettings interfaces to `src/lib/editor/types.ts`
-- [ ] T002 [P] Add PixelArtAssetV2 interface and migration types to `src/lib/editor/types.ts`
-- [ ] T003 [P] Add default constants (DEFAULT_TIMELINE, DEFAULT_ONION_SKIN) to `src/lib/editor/types.ts`
-- [ ] T004 Create clipboard module directory `src/lib/editor/clipboard/`
-- [ ] T005 [P] Create animation module directory `src/lib/editor/animation/`
+- [X] T001 Add Layer, Timeline, OnionSkinSettings interfaces to `src/lib/editor/types.ts`
+- [X] T002 [P] Add PixelArtAssetV2 interface and migration types to `src/lib/editor/types.ts`
+- [X] T003 [P] Add default constants (DEFAULT_TIMELINE, DEFAULT_ONION_SKIN) to `src/lib/editor/types.ts`
+- [X] T004 Create clipboard module directory `src/lib/editor/clipboard/`
+- [X] T005 [P] Create animation module directory `src/lib/editor/animation/`
 
 ---
 
@@ -33,13 +33,13 @@
 
 **WARNING**: No user story work can begin until this phase is complete
 
-- [ ] T006 Extend EditorState interface with activeLayerId, currentFrame, timeline, onionSkin in `src/lib/editor/types.ts`
-- [ ] T007 Update DEFAULT_EDITOR_STATE with new fields in `src/lib/editor/types.ts`
-- [ ] T008 Implement v1 to v2 asset migration function in `src/lib/editor/io/json.ts`
-- [ ] T009 Update loadAssetFromJSON to auto-migrate v1 assets in `src/lib/editor/io/json.ts`
-- [ ] T010 Update saveAssetToJSON to always use v2 format in `src/lib/editor/io/json.ts`
-- [ ] T011 Create layer compositing utility in `src/lib/editor/canvas/composite.ts`
-- [ ] T012 Update render functions to use layer compositing in `src/lib/editor/canvas/render.ts`
+- [X] T006 Extend EditorState interface with activeLayerId, currentFrame, timeline, onionSkin in `src/lib/editor/types.ts`
+- [X] T007 Update DEFAULT_EDITOR_STATE with new fields in `src/lib/editor/types.ts`
+- [X] T008 Implement v1 to v2 asset migration function in `src/lib/editor/io/json.js`
+- [X] T009 Update loadAssetFromJSON to auto-migrate v1 assets in `src/lib/editor/io/json.ts`
+- [X] T010 Update saveAssetToJSON to always use v2 format in `src/lib/editor/io/json.ts`
+- [X] T011 Create layer compositing utility in `src/lib/editor/canvas/composite.ts`
+- [X] T012 Update render functions to use layer compositing in `src/lib/editor/canvas/render.ts`
 
 **Checkpoint**: Foundation ready - layered rendering and v2 format working, user story implementation can begin
 
@@ -53,13 +53,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Create clipboard image reading function in `src/lib/editor/clipboard/paste.ts`
-- [ ] T014 [US1] Implement image-to-pixels conversion (crop, transparency) in `src/lib/editor/clipboard/paste.ts`
-- [ ] T015 [US1] Implement color extraction for palette update in `src/lib/editor/clipboard/paste.ts`
-- [ ] T016 [US1] Add pasteFromClipboard store operation in `src/lib/editor/state/editor.svelte.ts`
-- [ ] T017 [US1] Add keyboard handler for Ctrl/Cmd+V in `src/lib/editor/utils/keyboard.ts`
-- [ ] T018 [US1] Verify paste creates new layer with pasted pixels
-- [ ] T019 [US1] Handle edge cases: non-image data, oversized images, many colors
+- [X] T013 [US1] Create clipboard image reading function in `src/lib/editor/clipboard/paste.ts`
+- [X] T014 [US1] Implement image-to-pixels conversion (crop, transparency) in `src/lib/editor/clipboard/paste.ts`
+- [X] T015 [US1] Implement color extraction for palette update in `src/lib/editor/clipboard/paste.ts`
+- [X] T016 [US1] Add pasteFromClipboard store operation in `src/lib/editor/state/editor.svelte.ts`
+- [X] T017 [US1] Add keyboard handler for Ctrl/Cmd+V in `src/lib/editor/utils/keyboard.ts`
+- [X] T018 [US1] Verify paste creates new layer with pasted pixels
+- [X] T019 [US1] Handle edge cases: non-image data, oversized images, many colors
 
 **Checkpoint**: Paste functionality complete - users can import external images via clipboard
 
@@ -73,20 +73,20 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Add layer CRUD operations (create, delete, select) to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T021 [US2] Add layer property operations (rename, visibility, opacity) to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T022 [US2] Add layer reorder and merge operations to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T023 [US2] Add flattenAllLayers operation to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T024 [US2] Update drawing operations to target active layer only in `src/lib/editor/canvas/drawing.ts`
-- [ ] T025 [P] [US2] Create LayerPanel.svelte component in `src/lib/editor/components/LayerPanel.svelte`
-- [ ] T026 [US2] Implement layer list with selection, visibility toggle, opacity slider in LayerPanel
-- [ ] T027 [US2] Implement drag-to-reorder layers in LayerPanel
-- [ ] T028 [US2] Implement layer rename (double-click) in LayerPanel
-- [ ] T029 [US2] Add "New Layer", "Delete", "Merge Down", "Flatten" buttons to LayerPanel
-- [ ] T030 [US2] Integrate LayerPanel into main editor layout in `src/routes/editor/+page.svelte`
-- [ ] T031 [US2] Update PNG export to flatten visible layers in `src/lib/editor/io/png.ts`
-- [ ] T032 [US2] Add layer count warning (>32 layers) in `src/lib/editor/state/editor.svelte.ts`
-- [ ] T033 [US2] Handle edge case: prevent deleting last layer
+- [X] T020 [US2] Add layer CRUD operations (create, delete, select) to `src/lib/editor/state/editor.svelte.ts`
+- [X] T021 [US2] Add layer property operations (rename, visibility, opacity) to `src/lib/editor/state/editor.svelte.ts`
+- [X] T022 [US2] Add layer reorder and merge operations to `src/lib/editor/state/editor.svelte.ts`
+- [X] T023 [US2] Add flattenAllLayers operation to `src/lib/editor/state/editor.svelte.ts`
+- [X] T024 [US2] Update drawing operations to target active layer only in `src/lib/editor/canvas/drawing.ts`
+- [X] T025 [P] [US2] Create LayerPanel.svelte component in `src/lib/editor/components/LayerPanel.svelte`
+- [X] T026 [US2] Implement layer list with selection, visibility toggle, opacity slider in LayerPanel
+- [X] T027 [US2] Implement drag-to-reorder layers in LayerPanel
+- [X] T028 [US2] Implement layer rename (double-click) in LayerPanel
+- [X] T029 [US2] Add "New Layer", "Delete", "Merge Down", "Flatten" buttons to LayerPanel
+- [X] T030 [US2] Integrate LayerPanel into main editor layout in `src/routes/editor/+page.svelte`
+- [X] T031 [US2] Update PNG export to flatten visible layers in `src/lib/editor/io/png.ts`
+- [X] T032 [US2] Add layer count warning (>32 layers) in `src/lib/editor/state/editor.svelte.ts`
+- [X] T033 [US2] Handle edge case: prevent deleting last layer
 
 **Checkpoint**: Layer system complete - full layer management with UI and persistence
 
@@ -100,20 +100,20 @@
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Add frame operations (add, delete, duplicate, reorder) to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T035 [US3] Add frame navigation (selectFrame, currentFrame) to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T036 [US3] Add animation toggle (enableAnimation on any asset) to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T037 [US3] Create animation playback controller in `src/lib/editor/animation/playback.ts`
-- [ ] T038 [US3] Implement requestAnimationFrame-based preview loop in `src/lib/editor/animation/playback.ts`
-- [ ] T039 [P] [US3] Create Timeline.svelte component in `src/lib/editor/components/Timeline.svelte`
-- [ ] T040 [US3] Implement frame thumbnail strip in Timeline
-- [ ] T041 [US3] Implement play/pause/stop controls in Timeline
-- [ ] T042 [US3] Implement FPS slider in Timeline
-- [ ] T043 [US3] Implement frame add/delete/duplicate buttons in Timeline
-- [ ] T044 [US3] Implement drag-to-reorder frames in Timeline
-- [ ] T045 [US3] Integrate Timeline into main editor layout in `src/routes/editor/+page.svelte`
-- [ ] T046 [US3] Update canvas to show current frame based on timeline selection
-- [ ] T047 [US3] Handle edge case: prevent deleting last frame
+- [X] T034 [US3] Add frame operations (add, delete, duplicate, reorder) to `src/lib/editor/state/editor.svelte.ts`
+- [X] T035 [US3] Add frame navigation (selectFrame, currentFrame) to `src/lib/editor/state/editor.svelte.ts`
+- [X] T036 [US3] Add animation toggle (enableAnimation on any asset) to `src/lib/editor/state/editor.svelte.ts`
+- [X] T037 [US3] Create animation playback controller in `src/lib/editor/animation/playback.ts`
+- [X] T038 [US3] Implement requestAnimationFrame-based preview loop in `src/lib/editor/animation/playback.ts`
+- [X] T039 [P] [US3] Create Timeline.svelte component in `src/lib/editor/components/Timeline.svelte`
+- [X] T040 [US3] Implement frame thumbnail strip in Timeline
+- [X] T041 [US3] Implement play/pause/stop controls in Timeline
+- [X] T042 [US3] Implement FPS slider in Timeline
+- [X] T043 [US3] Implement frame add/delete/duplicate buttons in Timeline
+- [X] T044 [US3] Implement drag-to-reorder frames in Timeline
+- [X] T045 [US3] Integrate Timeline into main editor layout in `src/routes/editor/+page.svelte`
+- [X] T046 [US3] Update canvas to show current frame based on timeline selection
+- [X] T047 [US3] Handle edge case: prevent deleting last frame
 
 **Checkpoint**: Animation timeline complete - full frame management with preview playback
 
@@ -127,13 +127,13 @@
 
 ### Implementation for User Story 4
 
-- [ ] T048 [US4] Add onion skin toggle and settings to `src/lib/editor/state/editor.svelte.ts`
-- [ ] T049 [US4] Create onion skin renderer in `src/lib/editor/animation/onion-skin.ts`
-- [ ] T050 [US4] Implement previous frame overlay with red tint in `src/lib/editor/animation/onion-skin.ts`
-- [ ] T051 [US4] Implement next frame overlay with green tint in `src/lib/editor/animation/onion-skin.ts`
-- [ ] T052 [US4] Integrate onion skin rendering into canvas render pipeline in `src/lib/editor/canvas/render.ts`
-- [ ] T053 [US4] Add onion skin toggle button to Timeline.svelte
-- [ ] T054 [US4] Add onion skin opacity controls (previous/next) to Timeline.svelte
+- [X] T048 [US4] Add onion skin toggle and settings to `src/lib/editor/state/editor.svelte.ts`
+- [X] T049 [US4] Create onion skin renderer in `src/lib/editor/animation/onion-skin.ts`
+- [X] T050 [US4] Implement previous frame overlay with red tint in `src/lib/editor/animation/onion-skin.ts`
+- [X] T051 [US4] Implement next frame overlay with green tint in `src/lib/editor/animation/onion-skin.ts`
+- [X] T052 [US4] Integrate onion skin rendering into canvas render pipeline in `src/lib/editor/canvas/render.ts`
+- [X] T053 [US4] Add onion skin toggle button to Timeline.svelte
+- [X] T054 [US4] Add onion skin opacity controls (previous/next) to Timeline.svelte
 
 **Checkpoint**: Onion skinning complete - animators can see adjacent frames while editing
 
@@ -143,11 +143,11 @@
 
 **Purpose**: Final integration, validation, and cleanup
 
-- [ ] T055 [P] Update validation.ts to validate v2 format with layers in `src/lib/editor/utils/validation.ts`
-- [ ] T056 [P] Update presets to create assets with single default layer in `src/lib/editor/io/presets.ts`
-- [ ] T057 Run quickstart.md validation checklist for all user stories
-- [ ] T058 Performance validation: verify <100ms layer operations, 30 FPS animation preview
-- [ ] T059 Test backward compatibility: load v1 assets, verify auto-migration
+- [X] T055 [P] Update validation.ts to validate v2 format with layers in `src/lib/editor/utils/validation.ts`
+- [X] T056 [P] Update presets to create assets with single default layer in `src/lib/editor/io/presets.ts`
+- [X] T057 Run quickstart.md validation checklist for all user stories
+- [X] T058 Performance validation: verify <100ms layer operations, 30 FPS animation preview
+- [X] T059 Test backward compatibility: load v1 assets, verify auto-migration
 
 ---
 

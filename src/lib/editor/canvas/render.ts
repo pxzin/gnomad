@@ -2,9 +2,11 @@
  * Canvas rendering functions for the Pixel Art Editor
  */
 
-import type { PixelArtAsset } from '../types.js';
+import type { PixelArtAsset, PixelArtAssetV2, Layer, Pixel, OnionSkinSettings } from '../types.js';
 import { EDITOR_CONSTANTS } from '../types.js';
 import { parseHexColor } from '../utils/color.js';
+import { compositeLayers } from './composite.js';
+import { drawOnionSkinOverlays } from '../animation/onion-skin.js';
 
 /**
  * Render transparency checkerboard pattern.
@@ -167,4 +169,129 @@ export function assetToImageData(asset: PixelArtAsset): ImageData {
 	}
 
 	return imageData;
+}
+
+// ============================================================================
+// V2 Asset Rendering (Layer-based)
+// ============================================================================
+
+/**
+ * Render v2 asset (with layers) to canvas context at 1:1 scale.
+ */
+export function renderAssetV2ToCanvas(
+	ctx: CanvasRenderingContext2D,
+	asset: PixelArtAssetV2,
+	frameIndex: number
+): void {
+	ctx.clearRect(0, 0, asset.width, asset.height);
+
+	// Use layer compositing
+	const composite = compositeLayers(asset.layers, frameIndex, asset.width, asset.height);
+	ctx.drawImage(composite, 0, 0);
+}
+
+/**
+ * Render v2 asset with zoom and optional grid.
+ * Supports onion skinning for animation preview.
+ */
+export function renderAssetV2Zoomed(
+	ctx: CanvasRenderingContext2D,
+	asset: PixelArtAssetV2,
+	frameIndex: number,
+	zoom: number,
+	showGrid: boolean,
+	onionSkin?: OnionSkinSettings
+): void {
+	const canvasWidth = asset.width * zoom;
+	const canvasHeight = asset.height * zoom;
+
+	// Clear canvas
+	ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+	// Render transparency checkerboard
+	renderTransparencyPattern(ctx, asset.width, asset.height, zoom);
+
+	// Draw onion skin overlays (before current frame)
+	if (onionSkin?.enabled) {
+		drawOnionSkinOverlays(
+			ctx,
+			asset.layers,
+			frameIndex,
+			asset.width,
+			asset.height,
+			onionSkin,
+			zoom
+		);
+	}
+
+	// Use layer compositing
+	const composite = compositeLayers(asset.layers, frameIndex, asset.width, asset.height);
+
+	// Draw composite scaled to zoom
+	ctx.imageSmoothingEnabled = false;
+	ctx.drawImage(composite, 0, 0, asset.width * zoom, asset.height * zoom);
+
+	// Draw grid if enabled
+	if (showGrid && zoom >= 4) {
+		renderGrid(ctx, asset.width, asset.height, zoom, EDITOR_CONSTANTS.GRID_COLOR);
+	}
+}
+
+/**
+ * Render a single layer to a canvas context (for layer preview thumbnails).
+ */
+export function renderLayerPreview(
+	ctx: CanvasRenderingContext2D,
+	layer: Layer,
+	frameIndex: number,
+	width: number,
+	height: number
+): void {
+	ctx.clearRect(0, 0, width, height);
+
+	const framePixels = layer.frames[frameIndex] ?? [];
+	if (framePixels.length === 0) return;
+
+	for (const pixel of framePixels) {
+		const color = parseHexColor(pixel.color);
+		ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a / 255})`;
+		ctx.fillRect(pixel.x, pixel.y, 1, 1);
+	}
+}
+
+/**
+ * Create an offscreen canvas with v2 asset rendered at 1:1 for export.
+ * Flattens all visible layers.
+ */
+export function createExportCanvasV2(asset: PixelArtAssetV2, frameIndex: number): HTMLCanvasElement {
+	const canvas = document.createElement('canvas');
+	canvas.width = asset.width;
+	canvas.height = asset.height;
+
+	const ctx = canvas.getContext('2d')!;
+	ctx.clearRect(0, 0, asset.width, asset.height);
+
+	// Use layer compositing
+	const composite = compositeLayers(asset.layers, frameIndex, asset.width, asset.height);
+	ctx.drawImage(composite, 0, 0);
+
+	return canvas;
+}
+
+/**
+ * Render active layer highlight (outline around pixels in active layer).
+ * Useful for showing which layer is being edited.
+ */
+export function renderActiveLayerHighlight(
+	ctx: CanvasRenderingContext2D,
+	pixels: Pixel[],
+	zoom: number,
+	highlightColor: string = 'rgba(0, 150, 255, 0.3)'
+): void {
+	if (pixels.length === 0) return;
+
+	ctx.fillStyle = highlightColor;
+	for (const pixel of pixels) {
+		ctx.fillRect(pixel.x * zoom, pixel.y * zoom, zoom, zoom);
+	}
 }

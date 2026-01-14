@@ -2,9 +2,9 @@
  * Development-mode save functions that write directly to the project
  */
 
-import type { PixelArtAsset } from '../types.js';
+import type { PixelArtAssetV2 } from '../types.js';
 import { saveAssetToJson } from './json.js';
-import { exportToPngBlob } from './png.js';
+import { exportToPngBlobV2 } from './png.js';
 
 /**
  * Get the category from preset name
@@ -23,7 +23,7 @@ function getCategoryFromPreset(preset: string): string {
  * Save JSON file directly to src/lib/assets/source/
  * Only works in development mode
  */
-export async function devSaveJson(asset: PixelArtAsset): Promise<{ success: boolean; path?: string; error?: string }> {
+export async function devSaveJson(asset: PixelArtAssetV2): Promise<{ success: boolean; path?: string; error?: string }> {
 	try {
 		const json = saveAssetToJson(asset);
 
@@ -54,9 +54,10 @@ export async function devSaveJson(asset: PixelArtAsset): Promise<{ success: bool
  * Save PNG file directly to src/lib/assets/sprites/{category}/
  * Only works in development mode
  */
-export async function devSavePng(asset: PixelArtAsset): Promise<{ success: boolean; path?: string; error?: string }> {
+export async function devSavePng(asset: PixelArtAssetV2): Promise<{ success: boolean; path?: string; error?: string }> {
 	try {
-		const blob = await exportToPngBlob(asset);
+		// Export first frame (frame 0) as PNG
+		const blob = await exportToPngBlobV2(asset, 0);
 
 		// Convert blob to base64
 		const base64Data = await new Promise<string>((resolve, reject) => {

@@ -4,14 +4,14 @@
  */
 
 import { fileOpen, fileSave } from 'browser-fs-access';
-import type { PixelArtAsset } from '../types.js';
+import type { PixelArtAssetV2 } from '../types.js';
 import { loadAssetFromJsonDetailed, saveAssetToJson } from './json.js';
 
 /**
  * Result of opening an asset file.
  */
 export interface OpenAssetResult {
-	asset: PixelArtAsset;
+	asset: PixelArtAssetV2;
 	handle: FileSystemFileHandle | null;
 	filename: string;
 }
@@ -19,6 +19,7 @@ export interface OpenAssetResult {
 /**
  * Load asset via file picker dialog.
  * Returns asset, file handle (if supported), and filename.
+ * Auto-migrates v1 assets to v2 format.
  */
 export async function openAssetFile(): Promise<OpenAssetResult | null> {
 	try {
@@ -54,7 +55,7 @@ export async function openAssetFile(): Promise<OpenAssetResult | null> {
  * Returns the file handle for future saves.
  */
 export async function saveAssetFile(
-	asset: PixelArtAsset,
+	asset: PixelArtAssetV2,
 	handle?: FileSystemFileHandle | null
 ): Promise<FileSystemFileHandle | null> {
 	const json = saveAssetToJson(asset);
@@ -86,7 +87,7 @@ export async function saveAssetFile(
  * Always prompts for new location.
  */
 export async function saveAssetFileAs(
-	asset: PixelArtAsset
+	asset: PixelArtAssetV2
 ): Promise<FileSystemFileHandle | null> {
 	return saveAssetFile(asset, null);
 }
