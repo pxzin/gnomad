@@ -20,6 +20,7 @@ import {
 	TASK_ASSIGNMENT_THROTTLE_TICKS,
 	MAX_PATHFIND_ATTEMPTS_PER_GNOME
 } from '$lib/config/performance';
+import { INTERRUPT_IDLE_BEHAVIORS_FOR_TASKS } from '$lib/config/idle-behavior';
 
 /**
  * Task assignment system update.
@@ -105,13 +106,31 @@ export function taskAssignmentSystem(state: GameState): GameState {
 }
 
 /**
- * Get all idle gnomes.
+ * Get all gnomes available for task assignment.
+ *
+ * Returns gnomes that are:
+ * - Truly idle (state === Idle, no task)
+ * - Performing idle behaviors (strolling, socializing, resting) if INTERRUPT_IDLE_BEHAVIORS_FOR_TASKS is enabled
  */
 function getIdleGnomes(state: GameState): Entity[] {
 	const gnomeEntities = getEntitiesWithGnome(state);
 	return gnomeEntities.filter((entity) => {
 		const gnome = state.gnomes.get(entity);
-		return gnome && gnome.state === GnomeState.Idle && gnome.currentTaskId === null;
+		if (!gnome) return false;
+		if (gnome.currentTaskId !== null) return false;
+
+		// Truly idle gnomes are always available
+		if (gnome.state === GnomeState.Idle) return true;
+
+		// If interruption is enabled, gnomes doing idle behaviors are also available
+		if (INTERRUPT_IDLE_BEHAVIORS_FOR_TASKS && gnome.idleBehavior) {
+			// Strolling gnomes are in Walking state but can be interrupted
+			if (gnome.state === GnomeState.Walking && gnome.idleBehavior.type === 'strolling') {
+				return true;
+			}
+		}
+
+		return false;
 	});
 }
 

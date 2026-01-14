@@ -25,3 +25,15 @@ export const SOCIALIZE_MAX_DURATION_TICKS = 900;
 
 /** Pause duration after completing a stroll (ticks) */
 export const STROLL_PAUSE_DURATION_TICKS = 60;
+
+/**
+ * Whether idle behaviors (strolling, socializing, resting) can be interrupted
+ * when a new task becomes available.
+ *
+ * When true: Gnomes performing idle behaviors will immediately stop and take
+ * new tasks. Better for debugging and responsive gameplay.
+ *
+ * When false: Gnomes will finish their current idle behavior before accepting
+ * new tasks. More realistic/organic feeling for final gameplay.
+ */
+export const INTERRUPT_IDLE_BEHAVIORS_FOR_TASKS = true;
