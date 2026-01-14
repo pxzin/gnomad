@@ -159,11 +159,26 @@ function getUnassignedTasks(state: GameState): [Entity, Task][] {
 }
 
 /**
- * Group tasks by priority level.
- * Returns a map from priority (Urgent=3 down to Low=0) to tasks at that level.
- * Tasks within each group are already sorted by creation time (FIFO).
+ * Calculate Manhattan distance between two points.
+ * Used as a cheap heuristic to estimate task proximity before expensive pathfinding.
  */
-function groupTasksByPriority(tasks: [Entity, Task][]): Map<TaskPriority, [Entity, Task][]> {
+function manhattanDistance(x1: number, y1: number, x2: number, y2: number): number {
+	return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+}
+
+/**
+ * Group tasks by priority level and sort by estimated distance to gnome.
+ * Returns a map from priority (Urgent=3 down to Low=0) to tasks at that level.
+ * Tasks within each group are sorted by Manhattan distance (ascending), then creation time (FIFO).
+ *
+ * Sorting by distance first ensures closer tasks (more likely reachable) are tried before
+ * distant tasks, reducing wasted pathfinding attempts on unreachable tasks.
+ */
+function groupTasksByPriority(
+	tasks: [Entity, Task][],
+	gnomeX: number,
+	gnomeY: number
+): Map<TaskPriority, [Entity, Task][]> {
 	const groups = new Map<TaskPriority, [Entity, Task][]>();
 
 	// Initialize all priority levels
@@ -172,13 +187,23 @@ function groupTasksByPriority(tasks: [Entity, Task][]): Map<TaskPriority, [Entit
 	groups.set(TaskPriority.Normal, []);
 	groups.set(TaskPriority.Low, []);
 
-	// Group tasks by priority (input is already sorted by priority desc, createdAt asc)
+	// Group tasks by priority
 	for (const taskTuple of tasks) {
 		const [, task] = taskTuple;
 		const group = groups.get(task.priority);
 		if (group) {
 			group.push(taskTuple);
 		}
+	}
+
+	// Sort each group by Manhattan distance (ascending), then creation time (FIFO)
+	for (const [, group] of groups) {
+		group.sort((a, b) => {
+			const distA = manhattanDistance(gnomeX, gnomeY, a[1].targetX, a[1].targetY);
+			const distB = manhattanDistance(gnomeX, gnomeY, b[1].targetX, b[1].targetY);
+			if (distA !== distB) return distA - distB;
+			return a[1].createdAt - b[1].createdAt;
+		});
 	}
 
 	return groups;
@@ -204,10 +229,15 @@ const PRIORITY_ORDER: TaskPriority[] = [
  *
  * Selection algorithm:
  * 1. Group tasks by priority level
- * 2. For each priority group (highest first):
- *    - Find the closest reachable task (by path length)
- *    - If multiple tasks have the same path length, use FIFO (createdAt)
- * 3. Return the closest task from the highest priority group that has reachable tasks
+ * 2. Within each group, sort by Manhattan distance to gnome (closest first)
+ * 3. For each priority group (highest first):
+ *    - Sample tasks from BOTH ends of the distance spectrum (close AND far)
+ *    - This ensures we don't miss reachable distant tasks when close ones are blocked
+ * 4. Return first reachable task from the highest priority group
+ *
+ * The hybrid sampling approach handles two failure scenarios:
+ * - Close tasks unreachable (blocked by terrain) → distant tasks still get tried
+ * - Distant tasks unreachable → close tasks still get tried first
  *
  * Performance: Limited to MAX_PATHFIND_ATTEMPTS_PER_GNOME total attempts across all groups.
  */
@@ -220,8 +250,8 @@ function findReachableTask(
 ): ReachableTaskResult | null {
 	if (tasks.length === 0) return null;
 
-	// Group tasks by priority
-	const groups = groupTasksByPriority(tasks);
+	// Group tasks by priority and sort by distance to gnome
+	const groups = groupTasksByPriority(tasks, gnomeX, gnomeY);
 
 	let totalAttempts = 0;
 
@@ -230,63 +260,61 @@ function findReachableTask(
 		const tasksInGroup = groups.get(priority);
 		if (!tasksInGroup || tasksInGroup.length === 0) continue;
 
-		// Find the closest reachable task in this priority group
-		let bestTask: ReachableTaskResult | null = null;
-		let bestPathLength = Infinity;
-		let bestCreatedAt = Infinity;
+		// Build sampling order: alternate between close and far tasks
+		// This ensures we try both ends of the distance spectrum
+		const samplingOrder = buildSamplingOrder(tasksInGroup.length);
 
-		for (let i = 0; i < tasksInGroup.length; i++) {
+		for (const idx of samplingOrder) {
 			// Stop after max attempts to prevent CPU overload
 			if (totalAttempts >= MAX_PATHFIND_ATTEMPTS_PER_GNOME) {
-				// If we found any task in this group, return it
-				if (bestTask) return bestTask;
-				// Otherwise, we've exhausted our budget with no result
 				return null;
 			}
 
-			const [taskEntity, task] = tasksInGroup[i]!;
+			const [taskEntity, task] = tasksInGroup[idx]!;
 
 			// Calculate path to task
 			const path = findPath(state, gnomeX, gnomeY, task.targetX, task.targetY);
 			totalAttempts++;
 
 			if (path && path.length > 0) {
-				const pathLength = path.length;
-
-				// Check if this is better than current best:
-				// - Shorter path wins
-				// - Equal path length: earlier createdAt wins (FIFO)
-				const isBetter =
-					pathLength < bestPathLength ||
-					(pathLength === bestPathLength && task.createdAt < bestCreatedAt);
-
-				if (isBetter) {
-					// Find original index in the input tasks array for taskIndex
-					const originalIndex = tasks.findIndex(([e]) => e === taskEntity);
-					bestTask = {
-						taskIndex: originalIndex,
-						taskEntity,
-						task,
-						path
-					};
-					bestPathLength = pathLength;
-					bestCreatedAt = task.createdAt;
-
-					// Return immediately if we found a reachable task
-					// This prevents wasting attempts on unreachable tasks
-					return bestTask;
-				}
+				// Find original index in the input tasks array for taskIndex
+				const originalIndex = tasks.findIndex(([e]) => e === taskEntity);
+				return {
+					taskIndex: originalIndex,
+					taskEntity,
+					task,
+					path
+				};
 			}
-		}
-
-		// If we found a reachable task in this priority group, return it
-		// (don't check lower priority groups - priority dominates)
-		if (bestTask) {
-			return bestTask;
 		}
 
 		// No reachable tasks in this priority group, continue to next lower priority
 	}
 
 	return null;
+}
+
+/**
+ * Build a sampling order that alternates between close and far indices.
+ * Given array length N, returns indices in order: [0, N-1, 1, N-2, 2, N-3, ...]
+ * This ensures we sample both ends of a distance-sorted array.
+ */
+function buildSamplingOrder(length: number): number[] {
+	if (length === 0) return [];
+	if (length === 1) return [0];
+
+	const order: number[] = [];
+	let left = 0;
+	let right = length - 1;
+
+	while (left <= right) {
+		order.push(left);
+		if (left !== right) {
+			order.push(right);
+		}
+		left++;
+		right--;
+	}
+
+	return order;
 }
