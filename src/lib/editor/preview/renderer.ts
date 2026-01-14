@@ -3,15 +3,15 @@
  */
 
 import { Application, Sprite, Texture, AnimatedSprite, Rectangle } from 'pixi.js';
-import type { PixelArtAsset } from '../types.js';
-import { createExportCanvas } from '../canvas/render.js';
+import type { PixelArtAssetV2 } from '../types.js';
+import { createExportCanvasV2 } from '../canvas/render.js';
 
 /**
  * Preview renderer interface
  */
 export interface PreviewRenderer {
 	/** Update preview with current asset */
-	update(asset: PixelArtAsset): void;
+	update(asset: PixelArtAssetV2, frameIndex?: number): void;
 	/** Set preview scale */
 	setScale(scale: number): void;
 	/** Play animation (for sprite sheets) */
@@ -52,30 +52,21 @@ export async function createPreviewRenderer(
 		}
 	}
 
-	function update(asset: PixelArtAsset): void {
+	function update(asset: PixelArtAssetV2, frameIndex: number = 0): void {
 		clearStage();
 
-		// Create texture from asset
-		const canvas = createExportCanvas(asset);
-		const texture = Texture.from(canvas);
+		// Get frame count from layers
+		const frameCount = asset.layers[0]?.frames.length ?? 1;
 
-		// Check if this is an animated sprite sheet
-		if (asset.animation && asset.animation.frameCount > 1) {
-			// Create animated sprite
+		// Check if this is an animated asset with multiple frames
+		if (asset.animation && frameCount > 1) {
+			// Create animated sprite with all frames
 			const frames: Texture[] = [];
-			const { frameWidth, frameHeight, frameCount } = asset.animation;
 
 			for (let i = 0; i < frameCount; i++) {
-				const frameTexture = new Texture({
-					source: texture.source,
-					frame: new Rectangle(
-						i * frameWidth,
-						0,
-						frameWidth,
-						frameHeight
-					)
-				});
-				frames.push(frameTexture);
+				const canvas = createExportCanvasV2(asset, i);
+				const texture = Texture.from(canvas);
+				frames.push(texture);
 			}
 
 			const animatedSprite = new AnimatedSprite(frames);
@@ -88,7 +79,10 @@ export async function createPreviewRenderer(
 
 			currentSprite = animatedSprite;
 		} else {
-			// Create static sprite
+			// Create static sprite from current frame
+			const canvas = createExportCanvasV2(asset, frameIndex);
+			const texture = Texture.from(canvas);
+
 			const sprite = new Sprite(texture);
 			sprite.scale.set(currentScale);
 			sprite.anchor.set(0.5);

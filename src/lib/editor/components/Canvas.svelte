@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import type { EditorStore } from '../state/editor.svelte.js';
-	import { renderAssetZoomed, renderCursor } from '../canvas/render.js';
+	import { renderAssetV2Zoomed, renderCursor } from '../canvas/render.js';
 	import { eventToPixel, isInBounds } from '../utils/coordinates.js';
 	import { getTool, createToolContext, resetAllToolStates } from '../tools/types.js';
 
@@ -22,6 +22,9 @@
 	const showGrid = $derived(store.state.showGrid);
 	const currentTool = $derived(store.state.currentTool);
 	const currentColor = $derived(store.state.currentColor);
+	const activeLayerId = $derived(store.state.activeLayerId);
+	const currentFrame = $derived(store.state.currentFrame);
+	const onionSkin = $derived(store.state.onionSkin);
 
 	const canvasWidth = $derived(asset ? asset.width * zoom : 0);
 	const canvasHeight = $derived(asset ? asset.height * zoom : 0);
@@ -32,7 +35,7 @@
 
 	function redraw() {
 		if (!ctx || !asset) return;
-		renderAssetZoomed(ctx, asset, zoom, showGrid);
+		renderAssetV2Zoomed(ctx, asset, currentFrame, zoom, showGrid, onionSkin);
 
 		// Draw cursor if hovering over valid pixel
 		if (currentPixel.x >= 0 && isInBounds(asset, currentPixel.x, currentPixel.y)) {
@@ -48,19 +51,23 @@
 				ctx = canvas.getContext('2d');
 			}
 			if (ctx) {
-				// Access zoom and showGrid to track them as dependencies
+				// Access dependencies to track them for redraw
 				const _ = zoom;
 				const __ = showGrid;
+				const ___ = currentFrame;
+				const ____ = onionSkin;
 				redraw();
 			}
 		}
 	});
 
 	function getToolContext() {
-		if (!asset) return null;
+		if (!asset || !activeLayerId) return null;
 
 		return createToolContext(
 			asset,
+			activeLayerId,
+			currentFrame,
 			currentColor,
 			(newAsset) => store.updateAsset(newAsset),
 			(color) => store.setColor(color),

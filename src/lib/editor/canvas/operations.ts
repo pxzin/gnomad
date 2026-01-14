@@ -2,7 +2,7 @@
  * Canvas pixel operations for the Pixel Art Editor
  */
 
-import type { PixelArtAsset, Pixel } from '../types.js';
+import type { PixelArtAsset, PixelArtAssetV2, Pixel } from '../types.js';
 
 /**
  * Set a single pixel in the asset.
@@ -149,4 +149,165 @@ export function pixelMapToArray(map: Map<string, string>): Pixel[] {
 		pixels.push({ x, y, color });
 	}
 	return pixels;
+}
+
+// ============================================================================
+// V2 Asset Operations (Layer-based)
+// ============================================================================
+
+/**
+ * Set a pixel on a specific layer in a specific frame.
+ * Returns new asset (immutable update).
+ */
+export function setPixelV2(
+	asset: PixelArtAssetV2,
+	layerId: string,
+	frameIndex: number,
+	x: number,
+	y: number,
+	color: string
+): PixelArtAssetV2 {
+	// Validate bounds
+	if (x < 0 || x >= asset.width || y < 0 || y >= asset.height) {
+		return asset;
+	}
+
+	const layerIndex = asset.layers.findIndex((l) => l.id === layerId);
+	if (layerIndex === -1) return asset;
+
+	const layer = asset.layers[layerIndex];
+	if (!layer) return asset;
+
+	const framePixels = layer.frames[frameIndex];
+	if (!framePixels) return asset;
+
+	// Remove existing pixel at this position
+	const filteredPixels = framePixels.filter((p) => p.x !== x || p.y !== y);
+
+	// Add new pixel
+	const newPixels: Pixel[] = [...filteredPixels, { x, y, color }];
+
+	// Create new frames array with updated frame
+	const newFrames = [...layer.frames];
+	newFrames[frameIndex] = newPixels;
+
+	// Create new layer with updated frames
+	const newLayer = { ...layer, frames: newFrames };
+
+	// Create new layers array with updated layer
+	const newLayers = [...asset.layers];
+	newLayers[layerIndex] = newLayer;
+
+	return {
+		...asset,
+		layers: newLayers
+	};
+}
+
+/**
+ * Clear a pixel on a specific layer in a specific frame.
+ * Returns new asset (immutable update).
+ */
+export function clearPixelV2(
+	asset: PixelArtAssetV2,
+	layerId: string,
+	frameIndex: number,
+	x: number,
+	y: number
+): PixelArtAssetV2 {
+	// Validate bounds
+	if (x < 0 || x >= asset.width || y < 0 || y >= asset.height) {
+		return asset;
+	}
+
+	const layerIndex = asset.layers.findIndex((l) => l.id === layerId);
+	if (layerIndex === -1) return asset;
+
+	const layer = asset.layers[layerIndex];
+	if (!layer) return asset;
+
+	const framePixels = layer.frames[frameIndex];
+	if (!framePixels) return asset;
+
+	// Remove pixel at this position
+	const newPixels = framePixels.filter((p) => p.x !== x || p.y !== y);
+
+	// If nothing changed, return original
+	if (newPixels.length === framePixels.length) {
+		return asset;
+	}
+
+	// Create new frames array with updated frame
+	const newFrames = [...layer.frames];
+	newFrames[frameIndex] = newPixels;
+
+	// Create new layer with updated frames
+	const newLayer = { ...layer, frames: newFrames };
+
+	// Create new layers array with updated layer
+	const newLayers = [...asset.layers];
+	newLayers[layerIndex] = newLayer;
+
+	return {
+		...asset,
+		layers: newLayers
+	};
+}
+
+/**
+ * Get pixel color from a specific layer at a specific frame.
+ * Returns null if transparent.
+ */
+export function getPixelV2(
+	asset: PixelArtAssetV2,
+	layerId: string,
+	frameIndex: number,
+	x: number,
+	y: number
+): string | null {
+	// Validate bounds
+	if (x < 0 || x >= asset.width || y < 0 || y >= asset.height) {
+		return null;
+	}
+
+	const layer = asset.layers.find((l) => l.id === layerId);
+	if (!layer) return null;
+
+	const framePixels = layer.frames[frameIndex];
+	if (!framePixels) return null;
+
+	const pixel = framePixels.find((p) => p.x === x && p.y === y);
+	return pixel?.color ?? null;
+}
+
+/**
+ * Get composite pixel color from all visible layers at a position.
+ * Returns the topmost visible pixel color or null.
+ */
+export function getCompositePixelV2(
+	asset: PixelArtAssetV2,
+	frameIndex: number,
+	x: number,
+	y: number
+): string | null {
+	// Validate bounds
+	if (x < 0 || x >= asset.width || y < 0 || y >= asset.height) {
+		return null;
+	}
+
+	// Check layers from top to bottom
+	for (let i = asset.layers.length - 1; i >= 0; i--) {
+		const layer = asset.layers[i];
+		if (!layer || !layer.visible || layer.opacity === 0) continue;
+
+		const framePixels = layer.frames[frameIndex];
+		if (!framePixels) continue;
+
+		const pixel = framePixels.find((p) => p.x === x && p.y === y);
+		if (pixel) {
+			return pixel.color;
+		}
+	}
+
+	return null;
 }

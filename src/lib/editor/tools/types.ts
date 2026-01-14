@@ -2,12 +2,12 @@
  * Tool types and registry for the Pixel Art Editor
  */
 
-import type { Tool, EditorTool, ToolContext, PixelArtAsset } from '../types.js';
+import type { Tool, EditorTool, ToolContext, PixelArtAssetV2 } from '../types.js';
 import { pencilTool, resetPencilState } from './pencil.js';
 import { eraserTool, resetEraserState } from './eraser.js';
 import { fillTool } from './fill.js';
 import { pickerTool } from './picker.js';
-import { setPixel, clearPixel, getPixel } from '../canvas/operations.js';
+import { setPixelV2, clearPixelV2, getCompositePixelV2 } from '../canvas/operations.js';
 
 /**
  * Tool registry - maps tool names to implementations.
@@ -52,11 +52,14 @@ export function resetAllToolStates(): void {
 
 /**
  * Create a tool context for the current editing session.
+ * Works with v2 assets, operating on the active layer and current frame.
  */
 export function createToolContext(
-	asset: PixelArtAsset,
+	asset: PixelArtAssetV2,
+	activeLayerId: string,
+	currentFrame: number,
 	color: string,
-	onAssetChange: (asset: PixelArtAsset) => void,
+	onAssetChange: (asset: PixelArtAssetV2) => void,
 	onColorChange: (color: string) => void,
 	onRedraw: () => void,
 	onPushUndo: () => void
@@ -70,17 +73,18 @@ export function createToolContext(
 		color,
 
 		setPixel(x: number, y: number, pixelColor: string): void {
-			currentAsset = setPixel(currentAsset, x, y, pixelColor);
+			currentAsset = setPixelV2(currentAsset, activeLayerId, currentFrame, x, y, pixelColor);
 			onAssetChange(currentAsset);
 		},
 
 		clearPixel(x: number, y: number): void {
-			currentAsset = clearPixel(currentAsset, x, y);
+			currentAsset = clearPixelV2(currentAsset, activeLayerId, currentFrame, x, y);
 			onAssetChange(currentAsset);
 		},
 
 		getPixel(x: number, y: number): string | null {
-			return getPixel(currentAsset, x, y);
+			// Get composite pixel from all visible layers (for picker tool)
+			return getCompositePixelV2(currentAsset, currentFrame, x, y);
 		},
 
 		setCurrentColor(newColor: string): void {

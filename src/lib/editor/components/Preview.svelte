@@ -66,7 +66,8 @@
 		isPlaying = !isPlaying;
 	}
 
-	const hasAnimation = $derived(asset?.animation && asset.animation.frameCount > 1);
+	// Check if asset has multiple frames (animation)
+	const hasAnimation = $derived(asset?.animation && (asset.layers[0]?.frames.length ?? 0) > 1);
 </script>
 
 {#if showPreview}

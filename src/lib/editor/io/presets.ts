@@ -2,7 +2,7 @@
  * Asset preset configurations for the Pixel Art Editor
  */
 
-import type { AssetPreset, AssetCategory, PresetConfig, PixelArtAsset } from '../types.js';
+import type { AssetPreset, AssetCategory, PresetConfig, PixelArtAssetV2, Layer } from '../types.js';
 import { TILE_SIZE, SPRITE_WIDTH, SPRITE_HEIGHT } from '$lib/config/rendering';
 
 /**
@@ -176,30 +176,43 @@ export function getPresetsGroupedByCategory(): Map<AssetCategory, PresetConfig[]
 }
 
 /**
- * Create new empty asset from preset.
+ * Generate a unique layer ID.
  */
-export function createAssetFromPreset(preset: AssetPreset, name: string): PixelArtAsset {
+function generateLayerId(): string {
+	return `layer_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Create new empty asset from preset (v2 format).
+ */
+export function createAssetFromPreset(preset: AssetPreset, name: string): PixelArtAssetV2 {
 	const config = getPreset(preset);
 
 	if (!config) {
 		throw new Error(`Unknown preset: ${preset}`);
 	}
 
-	const asset: PixelArtAsset = {
+	// Create default layer with single empty frame
+	const defaultLayer: Layer = {
+		id: generateLayerId(),
+		name: 'Layer 1',
+		visible: true,
+		opacity: 1.0,
+		frames: [[]] // Single empty frame
+	};
+
+	const asset: PixelArtAssetV2 = {
 		name,
-		version: 1,
+		version: 2,
 		preset,
 		width: config.width,
 		height: config.height,
-		pixels: []
+		layers: [defaultLayer]
 	};
 
 	// Add animation metadata if preset has it
 	if (config.animation) {
 		asset.animation = {
-			frameWidth: config.animation.frameWidth,
-			frameHeight: config.animation.frameHeight,
-			frameCount: config.animation.frameCount,
 			fps: 8 // Default animation speed
 		};
 	}
@@ -208,16 +221,24 @@ export function createAssetFromPreset(preset: AssetPreset, name: string): PixelA
 }
 
 /**
- * Create custom-sized asset.
+ * Create custom-sized asset (v2 format).
  */
-export function createCustomAsset(width: number, height: number, name: string): PixelArtAsset {
+export function createCustomAsset(width: number, height: number, name: string): PixelArtAssetV2 {
+	const defaultLayer: Layer = {
+		id: generateLayerId(),
+		name: 'Layer 1',
+		visible: true,
+		opacity: 1.0,
+		frames: [[]] // Single empty frame
+	};
+
 	return {
 		name,
-		version: 1,
+		version: 2,
 		preset: 'custom',
 		width,
 		height,
-		pixels: []
+		layers: [defaultLayer]
 	};
 }
 

@@ -34,6 +34,9 @@ export const KEYBOARD_SHORTCUTS = {
 	'ctrl+n': 'newAsset',
 	'ctrl+o': 'openAsset',
 
+	// Clipboard
+	'ctrl+v': 'paste',
+
 	// Color
 	x: 'swapColors'
 } as const;
@@ -95,6 +98,7 @@ export function handleKeyboardShortcut(
 		onExportPng?: () => void;
 		onNewAsset?: () => void;
 		onOpenAsset?: () => void;
+		onPaste?: () => void;
 	}
 ): boolean {
 	// Don't handle shortcuts when typing in input fields
@@ -156,6 +160,11 @@ export function handleKeyboardShortcut(
 			callbacks?.onOpenAsset?.();
 			break;
 
+		// Clipboard
+		case 'paste':
+			callbacks?.onPaste?.();
+			break;
+
 		// Color
 		case 'swapColors':
 			store.swapColors();
@@ -181,6 +190,7 @@ export function createKeyboardHandler(
 		onExportPng?: () => void;
 		onNewAsset?: () => void;
 		onOpenAsset?: () => void;
+		onPaste?: () => void;
 	}
 ): (event: KeyboardEvent) => void {
 	return (event: KeyboardEvent) => {

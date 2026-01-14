@@ -3,6 +3,69 @@
  */
 
 // ============================================================================
+// Layer & Animation Types (v2 Format)
+// ============================================================================
+
+/**
+ * A single drawing layer shared across all animation frames.
+ */
+export interface Layer {
+	/** Unique identifier for the layer */
+	id: string;
+	/** User-visible name (default: "Layer N") */
+	name: string;
+	/** Whether layer is visible in canvas and export */
+	visible: boolean;
+	/** Opacity from 0.0 (transparent) to 1.0 (opaque) */
+	opacity: number;
+	/**
+	 * Pixel data per frame.
+	 * frames[frameIndex] contains the Pixel[] for that frame.
+	 * All frames share the same layer structure.
+	 */
+	frames: Pixel[][];
+}
+
+/**
+ * Animation timeline playback state and configuration.
+ */
+export interface Timeline {
+	/** Frames per second for playback (1-30) */
+	fps: number;
+	/** Whether animation is currently playing */
+	playing: boolean;
+	/** Whether to loop playback */
+	loop: boolean;
+}
+
+/**
+ * Configuration for onion skinning overlay.
+ */
+export interface OnionSkinSettings {
+	/** Whether onion skinning is enabled */
+	enabled: boolean;
+	/** Show previous frame overlay */
+	showPrevious: boolean;
+	/** Show next frame overlay */
+	showNext: boolean;
+	/** Opacity for previous frame (0.0-1.0) */
+	previousOpacity: number;
+	/** Opacity for next frame (0.0-1.0) */
+	nextOpacity: number;
+}
+
+/**
+ * Temporary structure for handling pasted image data.
+ */
+export interface ClipboardImage {
+	/** Source image dimensions */
+	width: number;
+	height: number;
+	/** RGBA pixel data (width * height * 4 bytes) */
+	data: Uint8ClampedArray;
+}
+
+// ============================================================================
 // Asset Format Types
 // ============================================================================
 
@@ -78,7 +141,7 @@ export interface PresetConfig {
 }
 
 /**
- * JSON-serializable pixel art asset format.
+ * JSON-serializable pixel art asset format (v1 - legacy).
  * Designed to be human-readable and AI-writable.
  */
 export interface PixelArtAsset {
@@ -100,6 +163,50 @@ export interface PixelArtAsset {
 	animation?: AnimationMetadata;
 }
 
+/**
+ * Extended pixel art asset format with layer support (v2).
+ * Backward compatible - v1 assets are auto-migrated on load.
+ */
+export interface PixelArtAssetV2 {
+	/** Asset identifier (filename without extension) */
+	name: string;
+	/** Format version - MUST be 2 for layered assets */
+	version: 2;
+	/** Preset used to create this asset */
+	preset: AssetPreset;
+	/** Canvas width in pixels */
+	width: number;
+	/** Canvas height in pixels */
+	height: number;
+	/** Optional color palette for reference */
+	palette?: string[];
+	/** Layer stack (bottom to top) */
+	layers: Layer[];
+	/** Animation configuration (optional, enables animation mode) */
+	animation?: {
+		fps: number;
+	};
+}
+
+/**
+ * Union type for any asset version (used in loading/migration).
+ */
+export type AnyPixelArtAsset = PixelArtAsset | PixelArtAssetV2;
+
+/**
+ * Type guard to check if asset is v1 format.
+ */
+export function isV1Asset(asset: AnyPixelArtAsset): asset is PixelArtAsset {
+	return asset.version === 1;
+}
+
+/**
+ * Type guard to check if asset is v2 format.
+ */
+export function isV2Asset(asset: AnyPixelArtAsset): asset is PixelArtAssetV2 {
+	return asset.version === 2;
+}
+
 // ============================================================================
 // Editor State Types
 // ============================================================================
@@ -113,8 +220,8 @@ export type EditorTool = 'pencil' | 'eraser' | 'fill' | 'picker';
  * Complete editor application state.
  */
 export interface EditorState {
-	/** Current document being edited */
-	asset: PixelArtAsset | null;
+	/** Current document being edited (v2 format internally) */
+	asset: PixelArtAssetV2 | null;
 	/** Whether asset has unsaved changes */
 	isDirty: boolean;
 	/** Currently selected drawing tool */
@@ -130,15 +237,23 @@ export interface EditorState {
 	/** Whether to show PixiJS preview panel */
 	showPreview: boolean;
 	/** Undo history stack */
-	undoStack: PixelArtAsset[];
+	undoStack: PixelArtAssetV2[];
 	/** Redo history stack */
-	redoStack: PixelArtAsset[];
+	redoStack: PixelArtAssetV2[];
 	/** Maximum undo history size */
 	maxHistory: number;
 	/** File handle for JSON (File System Access API) */
 	jsonFileHandle: FileSystemFileHandle | null;
 	/** File handle for PNG export */
 	pngFileHandle: FileSystemFileHandle | null;
+	/** Currently selected layer ID */
+	activeLayerId: string | null;
+	/** Current frame index (0-based) */
+	currentFrame: number;
+	/** Animation timeline state */
+	timeline: Timeline;
+	/** Onion skinning configuration */
+	onionSkin: OnionSkinSettings;
 }
 
 // ============================================================================
@@ -149,15 +264,15 @@ export interface EditorState {
  * Context passed to tools during operations.
  */
 export interface ToolContext {
-	/** Current asset */
-	asset: PixelArtAsset;
+	/** Current asset (v2 format with layers) */
+	asset: PixelArtAssetV2;
 	/** Current drawing color */
 	color: string;
-	/** Callback to set a pixel */
+	/** Callback to set a pixel on the active layer */
 	setPixel(x: number, y: number, color: string): void;
-	/** Callback to clear a pixel (make transparent) */
+	/** Callback to clear a pixel (make transparent) on the active layer */
 	clearPixel(x: number, y: number): void;
-	/** Callback to get pixel color */
+	/** Callback to get pixel color from composite (all visible layers) */
 	getPixel(x: number, y: number): string | null;
 	/** Callback to set current color (for picker) */
 	setCurrentColor(color: string): void;
@@ -225,6 +340,31 @@ export const DEFAULT_PALETTE = [
 	'#00FF00' // Bright green (gnome)
 ] as const;
 
+/**
+ * Default timeline configuration.
+ */
+export const DEFAULT_TIMELINE: Timeline = {
+	fps: 8,
+	playing: false,
+	loop: true
+};
+
+/**
+ * Default onion skin settings.
+ */
+export const DEFAULT_ONION_SKIN: OnionSkinSettings = {
+	enabled: false,
+	showPrevious: true,
+	showNext: false,
+	previousOpacity: 0.3,
+	nextOpacity: 0.2
+};
+
+/**
+ * Layer limit for performance warning.
+ */
+export const LAYER_WARNING_THRESHOLD = 32;
+
 export const DEFAULT_EDITOR_STATE: EditorState = {
 	asset: null,
 	isDirty: false,
@@ -238,5 +378,9 @@ export const DEFAULT_EDITOR_STATE: EditorState = {
 	redoStack: [],
 	maxHistory: EDITOR_CONSTANTS.MAX_UNDO_HISTORY,
 	jsonFileHandle: null,
-	pngFileHandle: null
+	pngFileHandle: null,
+	activeLayerId: null,
+	currentFrame: 0,
+	timeline: { ...DEFAULT_TIMELINE },
+	onionSkin: { ...DEFAULT_ONION_SKIN }
 };
