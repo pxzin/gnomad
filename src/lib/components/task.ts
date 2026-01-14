@@ -54,6 +54,8 @@ export interface Task {
 	progress: number;
 	/** Target entity ID (for Collect tasks: the resource to collect) */
 	targetEntity: Entity | null;
+	/** Number of consecutive assignment cycles where this task remained unassigned despite idle gnomes */
+	unreachableCount: number;
 }
 
 /**
@@ -73,7 +75,8 @@ export function createDigTask(
 		createdAt,
 		assignedGnome: null,
 		progress: 0,
-		targetEntity: null
+		targetEntity: null,
+		unreachableCount: 0
 	};
 }
 
@@ -94,6 +97,7 @@ export function createCollectTask(
 		createdAt,
 		assignedGnome: null,
 		progress: 0,
-		targetEntity: resourceEntity
+		targetEntity: resourceEntity,
+		unreachableCount: 0
 	};
 }

@@ -35,3 +35,7 @@ export const IDLE_STROLL_MIN_RADIUS = 2;
 
 /** Maximum distance for socialization partner detection (tiles) */
 export const SOCIALIZATION_MAX_DISTANCE = 3;
+
+// Task Unreachability Detection
+/** Number of assignment cycles a task must remain unassigned (with idle gnomes) before marking as potentially unreachable */
+export const TASK_UNREACHABLE_THRESHOLD = 3;

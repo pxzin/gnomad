@@ -47,6 +47,9 @@ export const TASK_PRIORITY_COLORS: Record<TaskPriority, number> = {
 	[TaskPriority.Urgent]: 0xff4444 // Red
 };
 
+/** Color for tasks that appear unreachable (dark red) */
+export const TASK_UNREACHABLE_COLOR = 0x8b0000;
+
 // Permanent Background Colors
 /** Sky color for above horizon */
 export const PERMANENT_BACKGROUND_SKY_COLOR = 0x87ceeb;

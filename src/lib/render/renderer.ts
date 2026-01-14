@@ -18,11 +18,13 @@ import {
 	TASK_MARKER_ALPHA,
 	SKY_COLOR,
 	TASK_PRIORITY_COLORS,
+	TASK_UNREACHABLE_COLOR,
 	PERMANENT_BACKGROUND_SKY_COLOR,
 	PERMANENT_BACKGROUND_CAVE_COLOR,
 	BACKGROUND_TILE_COLORS
 } from '$lib/config/colors';
 import { TILE_SIZE, SPRITE_WIDTH, SPRITE_HEIGHT } from '$lib/config/rendering';
+import { TASK_UNREACHABLE_THRESHOLD } from '$lib/config/performance';
 import { isWorldBoundary } from '$lib/world-gen/generator';
 import { getBackgroundTileAt } from '$lib/ecs/background';
 
@@ -712,15 +714,18 @@ function renderSelection(renderer: Renderer, state: GameState): void {
  * - High: Yellow/Orange (0xffaa00)
  * - Normal: Blue (0x4a90d9)
  * - Low: Gray (0x888888)
+ * - Unreachable: Dark Red (0x8b0000) - overrides priority color
  */
 function renderTaskMarkers(renderer: Renderer, state: GameState): void {
 	renderer.taskMarkerGraphics.clear();
 
 	if (state.tasks.size === 0) return;
 
-	// Draw each task marker with its priority color
+	// Draw each task marker with its priority color (or unreachable color)
 	for (const [, task] of state.tasks) {
-		const color = TASK_PRIORITY_COLORS[task.priority];
+		// Use dark red for potentially unreachable tasks
+		const isUnreachable = task.unreachableCount >= TASK_UNREACHABLE_THRESHOLD;
+		const color = isUnreachable ? TASK_UNREACHABLE_COLOR : TASK_PRIORITY_COLORS[task.priority];
 
 		renderer.taskMarkerGraphics.rect(
 			task.targetX * TILE_SIZE + 2,

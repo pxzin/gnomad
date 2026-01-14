@@ -64,13 +64,20 @@ export function taskAssignmentSystem(state: GameState): GameState {
 			return true;
 		});
 
-		const result = findReachableTask(
-			currentState,
-			gnomeEntity,
-			gnomeX,
-			gnomeY,
-			eligibleTasks
-		);
+		// STICKY BEHAVIOR: First, try to find an adjacent task (within 2 tiles)
+		// This keeps gnomes working in the same area instead of wandering off
+		let result = findAdjacentTask(currentState, gnomeX, gnomeY, eligibleTasks);
+
+		// If no adjacent task, fall back to the full algorithm
+		if (!result) {
+			result = findReachableTask(
+				currentState,
+				gnomeEntity,
+				gnomeX,
+				gnomeY,
+				eligibleTasks
+			);
+		}
 
 		if (!result) continue;
 
@@ -95,14 +102,125 @@ export function taskAssignmentSystem(state: GameState): GameState {
 			idleBehavior: null
 		}));
 
-		// Mark task as assigned
+		// Mark task as assigned and reset unreachable count
 		currentState = updateTask(currentState, taskEntity, (t) => ({
 			...t,
-			assignedGnome: gnomeEntity
+			assignedGnome: gnomeEntity,
+			unreachableCount: 0
 		}));
 	}
 
+	// Find all tasks that are "protected" (connected to an active/assigned task via chain of dig tasks)
+	const protectedTasks = findProtectedTasks(currentState);
+
+	// Track how many idle gnomes we started with - if there were idle gnomes but tasks
+	// remain unassigned, those tasks are likely unreachable
+	const hadIdleGnomes = idleGnomes.length > 0;
+
+	// Increment unreachable count for DIG tasks that remain unassigned and are not protected
+	// (Collect tasks are excluded - resources are dynamic and may be briefly unreachable while falling)
+	for (const [taskEntity, task] of unassignedTasks) {
+		// Only track unreachable for Dig tasks
+		if (task.type !== TaskType.Dig) continue;
+
+		const isProtected = protectedTasks.has(`${task.targetX},${task.targetY}`);
+
+		if (!isProtected && hadIdleGnomes) {
+			// Truly isolated task - increment unreachable count
+			currentState = updateTask(currentState, taskEntity, (t) => ({
+				...t,
+				unreachableCount: t.unreachableCount + 1
+			}));
+		} else if (isProtected) {
+			// Task is in chain leading to active task - reset count (it's just waiting)
+			currentState = updateTask(currentState, taskEntity, (t) => ({
+				...t,
+				unreachableCount: 0
+			}));
+		}
+		// If no tasks are assigned yet, don't modify unreachableCount (wait for system to stabilize)
+	}
+
 	return currentState;
+}
+
+/**
+ * Find all dig task positions that are "protected" - connected via chain to an assigned task.
+ * Uses flood-fill/BFS starting from assigned dig tasks.
+ *
+ * A task is protected if:
+ * - It's assigned (being worked on), OR
+ * - It's adjacent to a protected task (recursive chain)
+ * - It's connected through already-dug air tiles (for T-shaped tunnels etc.)
+ *
+ * Returns a Set of "x,y" coordinate strings for protected positions.
+ */
+function findProtectedTasks(state: GameState): Set<string> {
+	const protected_ = new Set<string>();
+	const visited = new Set<string>();
+
+	// Build a map of all dig task positions for quick lookup
+	const digTaskPositions = new Map<string, Task>();
+	const assignedPositions: string[] = [];
+
+	for (const [, task] of state.tasks) {
+		if (task.type !== TaskType.Dig) continue;
+		const key = `${task.targetX},${task.targetY}`;
+		digTaskPositions.set(key, task);
+
+		if (task.assignedGnome !== null) {
+			assignedPositions.push(key);
+			protected_.add(key);
+		}
+	}
+
+	// Helper to check if a position is air (already dug)
+	const isAir = (x: number, y: number): boolean => {
+		if (y < 0 || y >= state.worldHeight || x < 0 || x >= state.worldWidth) {
+			return false;
+		}
+		return state.tileGrid[y]![x] === null;
+	};
+
+	// BFS from each assigned task to find all connected dig tasks
+	// Now also traverses through air tiles to connect T-shaped tunnels
+	const queue = [...assignedPositions];
+
+	while (queue.length > 0) {
+		const current = queue.shift()!;
+		if (visited.has(current)) continue;
+		visited.add(current);
+
+		const parts = current.split(',');
+		const x = Number(parts[0]);
+		const y = Number(parts[1]);
+
+		// Check all 4 cardinal directions
+		const neighborCoords = [
+			{ nx: x - 1, ny: y },
+			{ nx: x + 1, ny: y },
+			{ nx: x, ny: y - 1 },
+			{ nx: x, ny: y + 1 }
+		];
+
+		for (const { nx, ny } of neighborCoords) {
+			const neighborKey = `${nx},${ny}`;
+			if (visited.has(neighborKey)) continue;
+
+			// Check if neighbor is a dig task
+			if (digTaskPositions.has(neighborKey)) {
+				// This neighbor is a dig task connected to the chain
+				protected_.add(neighborKey);
+				queue.push(neighborKey);
+			} else if (isAir(nx, ny)) {
+				// This neighbor is already-dug air - traverse through it
+				// to potentially reach more dig tasks on the other side
+				queue.push(neighborKey);
+			}
+		}
+	}
+
+	return protected_;
 }
 
 /**
@@ -132,6 +250,71 @@ function getIdleGnomes(state: GameState): Entity[] {
 
 		return false;
 	});
+}
+
+/** Maximum distance (Manhattan) for a task to be considered "adjacent" for sticky behavior */
+const ADJACENT_TASK_RADIUS = 2;
+
+/**
+ * Find an adjacent task (within ADJACENT_TASK_RADIUS tiles) that is reachable.
+ * This implements "sticky behavior" - gnomes prefer to continue working in the same area.
+ *
+ * Priority order:
+ * 1. Dig tasks (keep digging before collecting)
+ * 2. Then by distance (closest first)
+ * 3. Then by task priority
+ *
+ * Returns null if no adjacent reachable task is found.
+ */
+function findAdjacentTask(
+	state: GameState,
+	gnomeX: number,
+	gnomeY: number,
+	tasks: [Entity, Task][]
+): ReachableTaskResult | null {
+	// Filter to only tasks within the adjacent radius
+	const adjacentTasks = tasks.filter(([, task]) => {
+		const distance = Math.abs(task.targetX - gnomeX) + Math.abs(task.targetY - gnomeY);
+		return distance <= ADJACENT_TASK_RADIUS;
+	});
+
+	if (adjacentTasks.length === 0) return null;
+
+	// Sort by: task type (dig first), then distance (closest), then priority (highest)
+	adjacentTasks.sort((a, b) => {
+		// Dig tasks have priority over Collect tasks
+		const typeA = a[1].type === TaskType.Dig ? 0 : 1;
+		const typeB = b[1].type === TaskType.Dig ? 0 : 1;
+		if (typeA !== typeB) return typeA - typeB;
+
+		// Then by distance
+		const distA = Math.abs(a[1].targetX - gnomeX) + Math.abs(a[1].targetY - gnomeY);
+		const distB = Math.abs(b[1].targetX - gnomeX) + Math.abs(b[1].targetY - gnomeY);
+		if (distA !== distB) return distA - distB;
+
+		// Then by priority
+		return b[1].priority - a[1].priority;
+	});
+
+	// Try pathfinding to adjacent tasks (limit attempts to avoid performance issues)
+	const maxAttempts = Math.min(adjacentTasks.length, 5);
+
+	for (let i = 0; i < maxAttempts; i++) {
+		const [taskEntity, task] = adjacentTasks[i]!;
+		const path = findPath(state, gnomeX, gnomeY, task.targetX, task.targetY);
+
+		if (path && path.length > 0) {
+			const originalIndex = tasks.findIndex(([e]) => e === taskEntity);
+			return {
+				taskIndex: originalIndex,
+				taskEntity,
+				task,
+				path
+			};
+		}
+	}
+
+	return null;
 }
 
 /**
